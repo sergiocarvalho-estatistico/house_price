@@ -1,0 +1,296 @@
+---
+title: "House Price - Data Prep"
+author: "Sérgio Carvalho"
+date: "`r format(Sys.Date(), '%d %B, %Y')`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    lightbox: true
+    gallery: false
+    highlight: zenburn 
+    code_folding: show
+    style_body: justify
+    df_print: paged
+    number_sections: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+editor_options: 
+    chunk_output_type: inline
+---
+
+
+```{r options-chunk, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      eval = TRUE, 
+                      message = FALSE,
+                      warning = FALSE, 
+                      include = TRUE,
+                      fig.path = "figures/",
+                      fig.width = 15, 
+                      fig.height = 6)
+```
+
+
+```{r pacotes-selecionados, message=FALSE, warning=FALSE, include=F}
+
+  suppressMessages(library(MASS))
+  suppressMessages(library(tidyverse))
+  suppressMessages(library(readr))
+  suppressMessages(library(dplyr))
+  suppressMessages(library(data.table))
+  suppressMessages(library(readxl))
+  suppressMessages(library(ggplot2))
+  suppressMessages(library(plotly))
+  suppressMessages(library(scales))
+  suppressMessages(library(lubridate))
+  suppressMessages(library(reshape)) 
+  suppressMessages(library(dummies))
+```
+
+# Objetivos
+
+  * Número de variáveis: 81 
+  * Tipo de variáveis
+      * * Inteiras ou discretas: 
+      * * Numéricas ou double
+      * * Categóricas
+      * * Qualitativas
+      * Qualidade dos dados          
+      * * Quantidade de NA's por variável
+  * Criação de novas variáveis, se precisar
+  * Transformação das variáveis, se precisar
+
+
+# Conjunto de Dados
+
+O dataprep será realizado considerando que os dados de treinamento e de teste foram amostrados de tal forma que as proporções de valores assumidos por cada variável estão equilibradas nas duas amostras.
+
+## Dados de treinamento 
+
+```{r read-data-train}
+# Read table 
+df.train <- data.table::fread('../dados/train.csv', 
+                              sep=",", 
+                              showProgress = FALSE) %>% 
+            data.frame(stringsAsFactors = F)
+df.train
+```
+
+
+# Conhecendo as caracteristicas dos dados
+
+```{r metadados}
+str(df.train)
+```
+
+Nosso conjunto de dados apresenta somente dois tipos de dados, além disso a primeira vista há muitos dados faltantes ou nulos. 
+
+# Separando o conjunto de dados pelo tipo.
+
+```{r data-type}
+tipo <- lapply(df.train,class)
+```
+
+## Dados tipo inteiro
+
+```{r type-integer}
+df.int <- df.train[,unlist(tipo) %in% "integer"]
+df.int
+```
+
+## Dados tipo string
+
+```{r type-str}
+df.str <- df.train[,unlist(tipo) %in% "character"]
+df.str
+```
+
+## Tranformando dados tipo string em categorical. 
+
+Afim de medir a influência que determinado valor de uma variável string exerce sobre a variável resposta, iremos tranformá-las em variável categórica.
+
+```{r convert-str-to-categorical}
+df.cat <- lapply(df.str,factor) %>% data.frame()
+df.cat
+```
+
+# Data Profiling
+
+## Tipo inteiro: % de valores nulos
+
+```{r values-nulls, fig.width=15, fig.height=7}
+apply(is.na(df.int),2,
+            function(x) round(100*sum(as.numeric(x))/length(x),2)) %>% 
+            sort(decreasing = T)
+```
+
+De forma geral podemos concluir que não há muitos valores nulos para as variáveis do tipo inteiro, sendo que apenas a variável LotFrontage apresenta cerca de 17.74 % de valores ausentes, mais adiante iremos decidir se está variável permanece ou será retirada de nosso conjunto de dados. 
+
+Obs.: Pode ser que seja possível através da média, mediana, knn e outra técnica imputar valores na variável LotFrontage, afim de preencher seus valores nulos.
+
+
+## Tipo Categorical: % de valores nulos
+
+```{r values-nulos, fig.width=15, fig.height=7}
+missing <- apply(is.na(df.cat),2,function(x){ 
+                                    nulos <-100*sum(as.numeric(x))/length(x)
+                                    round(nulos,2)
+                                    }) %>% 
+           sort(decreasing = T)
+missing
+```
+
+Veja que as variáveis PoolQC, MiscFeature, Alley, Fence e FireplaceQu não nos deixam outra alternativa senão a remoção delas do conjunto de dados, pois neste caso, a imputação de dados seria um grande problema na propagação do erro considerando as incertezas associadas aos métodos de imputação.   
+
+
+# Selecionando Variáveis
+
+Dos resultados acima iremos retirar de nosso conjunto de dados algumas variáveis. 
+
+## Selecão de Variável tipo inteiro:
+  
+  * LotFrontage (retiramos por questões de tempo)
+
+  
+```{r select-vars-integer}
+df.int <- df.int %>% 
+            select(-LotFrontage)
+df.int
+```
+
+## Selecão de Variável Tipo Sring:
+
+  * PoolQC
+  * MiscFeature
+  * Alley
+  * Fence
+  * FireplaceQu
+
+  
+```{r select-vars-string}
+df.cat <- df.cat %>% 
+            select(-PoolQC,-MiscFeature,
+                   -Alley,-Fence,-FireplaceQu)
+df.cat
+```
+
+
+# Juntandos os data frames
+
+Jutando os dados tipo inteiros e string.
+
+```{r bind-dfs}
+df.train <- bind_cols(df.int,df.cat)
+df.train
+```
+
+
+# Removendo valores nulos das linhas  
+
+Nosso df.train possui 1460 linhas. Se removermos os valores nulos das linhas será que ainda teremos volume de dados significativo ? Ou seja, qual a porcentagem de valores nulos nas linhas ? 
+
+```{r percent-null-rows}
+paste(round(100*(1-(nrow(na.omit(df.train))/nrow(df.train))),2),"%")
+```
+
+Com 8.36 % ainda nos sobre mais de 90% dos dados para análise, dessa forma removeremos os valores nulos das linhas.
+
+```{r remove-null-rows}
+df.train <- na.omit(df.train)
+df.train
+```
+
+Agora com 1338 linhas nosso df.train encontra-se limpo e pronto para ser explorado.
+
+
+# Dados de teste
+
+Iremos realizar nos dados de teste as mesmas transformações aplicadas aos dados de treino.  
+
+```{r read-data-test}
+df.test <- data.table::fread('../dados/test.csv', 
+                             sep=",", 
+                             showProgress = FALSE)  %>% 
+            data.frame(stringsAsFactors = F)
+df.test
+```
+
+# Selecionando as variáveis
+
+Removendo as mesmas variáveis do conjunto de treinamento.
+
+```{r select-vars}
+df.test <- df.test %>%
+              select(-LotFrontage,-PoolQC,
+                     -MiscFeature,-Alley,
+                     -Fence,-FireplaceQu)
+```
+
+
+# Separando o conjunto de dados de teste pelo tipo.
+
+```{r data-type-test}
+tipo <- lapply(df.test,class)
+```
+
+## Dados tipo inteiro
+
+```{r type-integer-test}
+test.int <- df.test[,unlist(tipo) %in% "integer"]
+test.int
+```
+
+
+
+## Dados tipo string
+
+```{r type-str-test}
+test.str <- df.test[,unlist(tipo) %in% "character"]
+test.str
+```
+
+## Tranformando dados tipo string em categorical. 
+
+```{r convert-str-to-categorical-test}
+test.cat <- lapply(test.str,factor) %>% data.frame()
+test.cat
+```
+
+# Juntandos os data frames
+
+Jutando os dados tipo inteiros e string.
+
+```{r bind-dfs-test}
+df.test <- bind_cols(test.int,test.cat)
+df.test
+```
+
+
+# Removendo valores nulos das linhas  
+
+Nosso df.train possui 1459 linhas. Se removermos os valores nulos das linhas será que ainda teremos volume de dados significativo ? Ou seja, qual a porcentagem de valores nulos nas linhas ? 
+
+```{r percent-null-rows-test}
+paste(round(100*(1-(nrow(na.omit(df.test))/nrow(df.test))),2),"%")
+```
+
+Com 9.6 % ainda nos sobre mais de 90% dos dados para análise, dessa forma removeremos os valores nulos das linhas.
+
+```{r remove-null-rows-test}
+df.test <- na.omit(df.test)
+df.test
+```
+
+Agora com 1319 linhas nosso df.test encontra-se limpo e pronto para ser explorado.
+
+
+# Exportando os dados limpos
+
+```{r output-data}
+write.csv(df.train,'../outputs/df.train.csv')
+write.csv(df.test,'../outputs/df.test.csv')
+```
+
+
