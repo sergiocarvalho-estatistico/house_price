@@ -33,14 +33,7 @@ knitr::opts_chunk$set(echo = TRUE,
   suppressMessages(library(tidyverse))
   suppressMessages(library(data.table))
   suppressMessages(library(caret))
-  suppressMessages(library(parallelMap)) 
-  suppressMessages(library(farff))
-  suppressMessages(library(ROCR))
-  suppressMessages(library(pROC))
   suppressMessages(library(ggplot2))
-  suppressMessages(library(ranger))
-  suppressMessages(library(lattice))
-  suppressMessages(library(latticeExtra))
   suppressMessages(library(C50))
   suppressMessages(library(kernlab))
   suppressMessages(library(mlbench))
@@ -49,17 +42,13 @@ knitr::opts_chunk$set(echo = TRUE,
   suppressMessages(library(klaR))
   suppressMessages(library(MLmetrics))
   suppressMessages(library(mlr))
-  suppressMessages(library(FSelector))
-  suppressMessages(library(Boruta))
-  suppressMessages(library(ggpubr)) 
-  suppressMessages(library(gridExtra))
-  
+
 ```
 
 
 # Objetivos
 
-  * Ulitizar o pacote caret para construição do modelos preditivo.  
+  * Ulitizar o pacote caret para construção do modelos preditivos.  
   * Métricas de Performance
   * * RMSE 
   * * Rsquare
@@ -116,7 +105,7 @@ fitControl <- trainControl(method="cv",
 ```
 
 
-## Training Random Forest
+## Usando Random Forest
 
 ```{r random-forest-train}
 set.seed(12345)
@@ -129,7 +118,7 @@ model_rf
 ```
 
 
-## Trainando o Método Glm
+## Usando Glm
 
 ```{r message=FALSE, warning=FALSE}
 set.seed(12345)

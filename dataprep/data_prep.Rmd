@@ -46,7 +46,7 @@ knitr::opts_chunk$set(echo = TRUE,
   suppressMessages(library(scales))
   suppressMessages(library(lubridate))
   suppressMessages(library(reshape)) 
-  suppressMessages(library(dummies))
+
 ```
 
 # Objetivos

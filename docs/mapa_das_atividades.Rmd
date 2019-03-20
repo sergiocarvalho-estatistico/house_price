@@ -33,23 +33,6 @@ knitr::opts_chunk$set(echo = TRUE,
 ```
 
 
-````{r pacotes-selecionados, include=F}
-# Pacotes Utilizados 
-
-  suppressMessages(library(MASS))
-  suppressMessages(library(tidyverse))
-  suppressMessages(library(readr))
-  suppressMessages(library(dplyr))
-  suppressMessages(library(data.table))
-  suppressMessages(library(readxl))
-  suppressMessages(library(ggplot2))
-  suppressMessages(library(plotly))
-  suppressMessages(library(scales))
-  suppressMessages(library(tidyr))
-  suppressMessages(library(lubridate))
-
-````
-
 # Reunião de Alinhamento  
 
 ## Participantes
