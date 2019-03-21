@@ -1,0 +1,2 @@
+"0","df.int <- df.train[,unlist(lapply(df.train,is.integer))]"
+"0","df.int"

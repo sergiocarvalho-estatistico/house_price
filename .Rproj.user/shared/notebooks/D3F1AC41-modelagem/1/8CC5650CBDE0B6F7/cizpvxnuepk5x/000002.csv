@@ -1,0 +1,2 @@
+"0","submit.glm <- data.frame(Id = model.test$Id,SalePrice = predicao$predicao, stringsAsFactors = F)"
+"0","write.csv(submit.glm, file=""../outputs/saleprice_glm.csv"",row.names = FALSE,quote=FALSE)"

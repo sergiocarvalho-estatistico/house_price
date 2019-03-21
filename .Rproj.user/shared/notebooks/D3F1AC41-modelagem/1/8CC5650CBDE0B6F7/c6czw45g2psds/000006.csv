@@ -1,0 +1,6 @@
+"0","qqplot(sort(fit.model$data$SalePrice)[1:length(predicao$predicao)],"
+"0","       sort(predicao$predicao),"
+"0","       main = 'QQ-plot',"
+"0","       ylab = 'Predição',"
+"0","       xlab = 'SalePrice',"
+"0","       col = c('blue','red') )"

@@ -1,0 +1,6 @@
+"0","# Read table "
+"0","df.train <- data.table::fread('../dados/train.csv', "
+"0","                              sep="","", "
+"0","                              showProgress = FALSE) %>% "
+"0","            data.frame(stringsAsFactors = F)"
+"0","df.train"

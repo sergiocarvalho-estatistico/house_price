@@ -1,0 +1,9 @@
+{
+    "path" : "D:/houseprice",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}

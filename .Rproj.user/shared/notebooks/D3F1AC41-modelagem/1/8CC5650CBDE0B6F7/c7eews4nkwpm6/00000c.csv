@@ -1,0 +1,1 @@
+"0","legend('topleft',legend = c('SalePrice','Valores ajustados'),col = c('blue','red'), lty = c(2,2) )"

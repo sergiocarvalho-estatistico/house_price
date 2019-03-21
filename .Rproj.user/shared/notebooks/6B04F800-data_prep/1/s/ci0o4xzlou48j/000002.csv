@@ -1,0 +1,7 @@
+"0","df.Functional <- test.fac %>% select(-GarageType,-GarageFinish,"
+"0","                                     -GarageCond,-BsmtExposure,"
+"0","                                     -BsmtQual,-BsmtCond,"
+"0","                                     -BsmtFinType1,-MasVnrType,"
+"0","                                     -MSZoning,"
+"0","                                     -Exterior1st,-Exterior2nd,"
+"0","                                     -KitchenQual)"

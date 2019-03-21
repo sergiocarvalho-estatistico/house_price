@@ -1,0 +1,301 @@
+---
+title: "Projeto Deméter: Classificação Multi-Classe"
+author: "Sérgio Carvalho"
+date: "`r format(Sys.Date(), '%d %B, %Y')`"
+output:
+  html_document:
+    theme: journal
+    highlight: zenburn 
+    code_folding: show
+    after_body: doc_suffix.html
+    before_body: doc_prefix.html
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 10
+    df_print: paged
+    number_sections: yes
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+editor_options: 
+    chunk_output_type: inline
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r pacotes-selecionados, include=F}
+  suppressMessages(library(MASS))
+  suppressMessages(library(tidyverse))
+  suppressMessages(library(data.table))
+  suppressMessages(library(caret))
+  suppressMessages(library(parallelMap)) 
+  suppressMessages(library(farff))
+  suppressMessages(library(ROCR))
+  suppressMessages(library(pROC))
+  suppressMessages(library(ggplot2))
+  suppressMessages(library(ranger))
+  suppressMessages(library(lattice))
+  suppressMessages(library(C50))
+  suppressMessages(library(kernlab))
+  suppressMessages(library(mlbench))
+  suppressMessages(library(randomForest))
+  suppressMessages(library(caretEnsemble))
+  suppressMessages(library(klaR))
+  suppressMessages(library(MLmetrics))
+```
+
+
+```{r load-data-set}
+# Lendo o conjunto de dados.
+df.dados <- fread(paste(getwd(),'/Dados/Consolidado_SemBuffer.csv',sep = ""))
+
+
+# Renomeando os valores da coluna classificacao.
+df.dados <- bind_rows(filter(df.dados, Classificacao == 'Colhido c/ Palha') %>% 
+                                            mutate(Classificacao = 'Palha'),
+                      filter(df.dados, Classificacao == 'Com Cana') %>% 
+                                            mutate(Classificacao = 'Cana'),
+                      filter(df.dados, Classificacao == 'Solo Exposto') %>% 
+                                            mutate(Classificacao = 'Solo'))
+
+
+# TRansformando o metadados do campo classificacao.
+set.seed(1234)
+df.dados <- df.dados %>% mutate(Classificacao = as.factor(Classificacao)) %>% 
+                         sample_n(nrow(df.dados))
+
+# df.dados$Classificacao %>% table %>% prop.table %>% round(2)
+
+df.dados
+```
+
+# Preparação e Pré-processamento de Dados
+
+Dividindo o conjuntos de dados em dados de treinamento (1%) e teste (99%). 
+
+```{r partition-data-set}
+# Create the training and test datasets
+set.seed(100)
+
+# Step 1: Get row numbers for the training data
+trainRowNumbers <- createDataPartition(df.dados[,'Classificacao'], 
+                                       p=0.01, 
+                                       list=FALSE)
+
+# Step 2: Create the training  dataset
+trainData <- df.dados[trainRowNumbers,]
+
+# Step 3: Create the test dataset
+testData <- df.dados[-trainRowNumbers,]
+
+# TRatando os novos fatores do campo classificacao
+
+trainData <- trainData %>% mutate(Classificacao = as.character(Classificacao)) %>% 
+                           mutate(Classificacao = as.factor(Classificacao))
+testData  <- testData  %>% mutate(Classificacao = as.character(Classificacao)) %>% 
+                           mutate(Classificacao = as.factor(Classificacao))
+df.dados  <- df.dados  %>% mutate(Classificacao = as.character(Classificacao)) %>% 
+                           mutate(Classificacao = as.factor(Classificacao))
+```
+
+
+
+```{r proporcao-das-classes}
+# number of rows
+nrow(df.dados) ; nrow(trainData) ; nrow(testData)
+
+df.dados$Classificacao  %>% table %>% prop.table() %>% round(2)
+cat('\n\n')
+
+trainData$Classificacao %>% table %>% prop.table() %>% round(2)
+cat('\n\n')
+
+testData$Classificacao  %>% table %>% prop.table() %>% round(2)
+```
+
+
+
+# Estatísticas Descritivas
+
+Vamos observar as estatísticas descritivas de cada coluna no conjunto de dados de treinamento.
+
+```{r statistic-descritivas}
+library(skimr)
+skimmed <- skim_to_wide(trainData)
+skimmed[, c(1:5, 9:11, 13, 15:16)]
+```
+
+
+# Pré-processamento para transformar os dados.
+
+
+```{r pre-process}
+preProcess_range_model <- preProcess(select(trainData,RED, GREEN, BLUE, RGB, NIR, NDVI), method='range')
+trainData <- predict(preProcess_range_model, newdata = trainData)
+
+apply(select(trainData,RED, BLUE, RGB, NIR, NDVI), 2, FUN=function(x){c('min'=min(x), 'max'=max(x))})
+```
+
+# Visualizando a importância das variáveis
+
+
+```{r importance-variables}
+featurePlot(x = select(trainData,RED, GREEN, BLUE, RGB, NIR, NDVI), 
+            y = trainData[,'Classificacao'], 
+            plot = "box",
+            strip=strip.custom(par.strip.text=list(cex=.7)),
+            scales = list(x = list(relation="free"), 
+                          y = list(relation="free")))
+```
+
+
+
+# Curvas de densidade das duas categorias.
+
+```{r densit-curves}
+featurePlot(x = select(trainData,RED, GREEN, BLUE, RGB, NIR, NDVI), 
+            y = trainData[,'Classificacao'], 
+            plot = "density",
+            strip=strip.custom(par.strip.text=list(cex=.7)),
+            scales = list(x = list(relation="free"), 
+                          y = list(relation="free")))
+```
+
+
+
+# Treinando alguns algoritmos.
+
+
+```{r - fitcontrol}
+set.seed(12345)
+fitControl <- trainControl(method="cv", 
+                           number=10, 
+                           repeats=3, 
+                           savePredictions = 'final',
+                           classProbs= TRUE, 
+                           summaryFunction = multiClassSummary)
+```
+
+
+# Modelos 
+
+## Training k-Nearest Neighbors (KNN)
+
+```{r - knn}
+#1 (kknn) k-Nearest Neighbors
+set.seed(12345)
+model_kknn <- caret::train(Classificacao ~ .,  data=trainData, 
+                                           method="kknn", 
+                                           tuneLength=5, 
+                                           trControl=fitControl)
+```
+
+
+
+## Training Random Forest
+
+```{r random-forest-train }
+set.seed(12345)
+# Train the model using rf
+model_rf = caret::train(Classificacao ~ ., data=trainData, 
+                                           tuneLength=5, 
+                                           trControl = fitControl,
+                                           method='rf')
+```
+
+
+## Training SVM
+
+```{r training-SVM}
+set.seed(12345)
+
+# Train the model using MARS
+model_svmRadial = caret::train(Classificacao ~ ., data=trainData,
+                                                  tuneLength=5, 
+                                                  trControl = fitControl,
+                                                  method='svmRadial')
+```
+
+
+
+# Resultados 
+
+
+```{r resample-results}
+resample_results <- resamples(list(KNN    = model_kknn,
+                                   RF     = model_rf,
+                                   SVM    = model_svmRadial))
+```
+ 
+
+
+```{r summary-results}
+# print results to console
+resumo <- summary(resample_results)
+```
+
+
+```{r draw-box}
+scales <- list(x=list(relation="free"), 
+               y=list(relation="free"))
+
+
+bwplot(resample_results, scales= scales, metric = list('Accuracy',
+                                                       'AUC',
+                                                       'Kappa',
+                                                       'Mean_F1',
+                                                       'Mean_Precision',
+                                                       'Mean_Recall',
+                                                       'Mean_Sensitivity',
+                                                       'Mean_Specificity'))
+```
+
+
+
+```{r matrix-confusion-models}
+  testData <- predict(preProcess_range_model, testData)
+
+  predicted_svm <- predict(model_svmRadial, testData[,-1])
+  predicted_knn <- predict(model_kknn     , testData[,-1])
+  predicted_rf  <- predict(model_rf       , testData[,-1])
+ 
+  # Matriz de Confusão
+  mat.conf_svm <- confusionMatrix(reference = testData[,'Classificacao'], 
+                                       data = predicted_svm, 
+                                       mode = 'everything' , 
+                                   positive = 'Cana')
+  
+  
+  mat.conf_knn<- confusionMatrix(reference  = testData[,'Classificacao'], 
+                                       data = predicted_knn, 
+                                       mode = 'everything' , 
+                                   positive = 'Cana')
+  
+  
+  mat.conf_rf <- confusionMatrix(reference  = testData[,'Classificacao'], 
+                                       data = predicted_rf, 
+                                       mode = 'everything', 
+                                   positive = 'Cana')
+```
+
+
+
+```{r result-matrix-confusion-svm}
+mat.conf_svm
+```
+
+```{r result-matrix-confusion-knn}
+mat.conf_knn
+```
+
+```{r result-matrix-confusion-rf}
+mat.conf_rf
+```
+
+
+

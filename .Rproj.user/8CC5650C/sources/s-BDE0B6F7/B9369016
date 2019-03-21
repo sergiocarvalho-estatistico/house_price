@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1553056448671.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2857106969",
+    "id" : "B9369016",
+    "lastKnownWriteTime" : 1553048125,
+    "last_content_update" : 1553048125,
+    "path" : "D:/houseprice/dataexploration/dataexplorer.Rmd",
+    "project_path" : "dataexploration/dataexplorer.Rmd",
+    "properties" : {
+        "chunk_output_type" : "inline"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

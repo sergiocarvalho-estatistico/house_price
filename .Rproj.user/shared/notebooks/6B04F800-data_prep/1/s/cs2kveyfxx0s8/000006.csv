@@ -1,0 +1,2 @@
+"0","test.fac <- df.test[,unlist(lapply(df.test,class)) %in% ""character""] %>%"
+"0","                           apply(2,as.factor) %>% data.frame"

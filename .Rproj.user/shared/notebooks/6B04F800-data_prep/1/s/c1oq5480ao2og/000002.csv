@@ -1,0 +1,5 @@
+"0","paste(round(100*(1-(nrow(na.omit(df.train))/nrow(df.train))),2),""%"")"
+"1","[1]"
+"1"," ""8.36 %"""
+"1","
+"

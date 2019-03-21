@@ -1,0 +1,2 @@
+"0","df.train <- bind_cols(df.int,df.fac)"
+"0","df.train"

@@ -1,0 +1,7 @@
+"0","rss <- sum((fit.model$residuals)^2)  ## soma dos quadrados dos resíduos "
+"0","tss <- sum((fit.model$data$SalePrice - mean(fit.model$data$SalePrice))^2)  ## soma total dos quadrados"
+"0","(r.square <- 1-rss/tss)"
+"1","[1]"
+"1"," 0.8661812"
+"1","
+"

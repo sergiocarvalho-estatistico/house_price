@@ -1,0 +1,25 @@
+"0","preProcess_missingdata_model <- preProcess(test.int[,-1], method='knnImpute')"
+"0","preProcess_missingdata_model"
+"1","Created from"
+"1"," "
+"1","1365"
+"1"," "
+"1","samples and"
+"1"," "
+"1","27"
+"1"," "
+"1","variables
+
+"
+"1","Pre-processing:
+"
+"1","  - centered (27)
+"
+"1","  - ignored (0)
+"
+"1","  - 5 nearest neighbor imputation (27)
+"
+"1","  - scaled (27)
+"
+"1","
+"

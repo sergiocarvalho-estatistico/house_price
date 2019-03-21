@@ -1,0 +1,8 @@
+"0","plot(fit.model$fitted.values,"
+"0","     col = 'blue', "
+"0","     pch = 20,"
+"0","     type = 'p',"
+"0","     ylim = c(0,7*10^5),     "
+"0","     xlab = 'SalePrice',"
+"0","     ylab = '',"
+"0","     main = 'Valores Ajustados de SalesPrice')"

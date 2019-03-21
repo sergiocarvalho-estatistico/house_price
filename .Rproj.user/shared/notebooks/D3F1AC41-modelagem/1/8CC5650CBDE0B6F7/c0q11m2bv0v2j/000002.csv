@@ -1,0 +1,6 @@
+"0","round(1-pchisq(18.742,1345, ncp = 0, lower.tail = TRUE, log.p = FALSE),3)
+"
+"1","[1]"
+"1"," 1"
+"1","
+"

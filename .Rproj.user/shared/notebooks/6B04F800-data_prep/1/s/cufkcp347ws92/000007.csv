@@ -1,0 +1,2 @@
+"0","test.int <- df.test[,unlist(lapply(df.test,class)) %in% ""integer""]"
+"0","test.int"

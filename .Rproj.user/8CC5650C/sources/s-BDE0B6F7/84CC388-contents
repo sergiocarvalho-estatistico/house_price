@@ -1,0 +1,240 @@
+
+Novamente recorremos ao caret para imputar essas categorias. 
+
+
+Para construir um modelo que imput a categoria vamos retirar todas as variáveis que possuem alguma poercentagem de valores nulos e deixar somente uma dela em cada modelo. 
+
+## Criando os data frames
+
+
+```{r dfgaragetype}
+df.GarageType <- test.fac %>% select(-GarageFinish,-GarageCond,
+                                     -BsmtExposure,-BsmtQual,
+                                     -BsmtCond,-BsmtFinType1,
+                                     -MasVnrType,
+                                     -MSZoning,-Functional,
+                                     -Exterior1st,-Exterior2nd,
+                                     -KitchenQual)
+```
+
+
+```{r GarageFinish}
+df.GarageFinish <- test.fac %>% select(-GarageType,-GarageCond,
+                                     -BsmtExposure,-BsmtQual,
+                                     -BsmtCond,-BsmtFinType1,
+                                     -MasVnrType,
+                                     -MSZoning,-Functional,
+                                     -Exterior1st,-Exterior2nd,
+                                     -KitchenQual)
+```
+
+
+```{r GarageCond}
+df.GarageCond <- test.fac %>% select(-GarageType,-GarageFinish,
+                                   -BsmtExposure,-BsmtQual,
+                                   -BsmtCond,-BsmtFinType1,
+                                   -MasVnrType,
+                                   -MSZoning,-Functional,
+                                   -Exterior1st,-Exterior2nd,
+                                   -KitchenQual)
+```
+
+
+```{r -BsmtExposure}
+df.BsmtExposure <- test.fac %>% select(-GarageType,-GarageFinish,
+                                     -GarageCond,-BsmtQual,
+                                     -BsmtCond,-BsmtFinType1,
+                                     -MasVnrType,
+                                     -MSZoning,-Functional,
+                                     -Exterior1st,-Exterior2nd,
+                                     -KitchenQual)
+
+```
+
+
+```{r BsmtQual}
+df.BsmtQual <- test.fac %>% select(-GarageType,-GarageFinish,
+                                  -GarageCond,-BsmtExposure,
+                                  -BsmtCond,-BsmtFinType1,
+                                  -MasVnrType,
+                                  -MSZoning,-Functional,
+                                  -Exterior1st,-Exterior2nd,
+                                  -KitchenQual)
+
+```
+
+
+```{r BsmtCond}
+df.BsmtCond <- test.fac %>% select(-GarageType,-GarageFinish,
+                                     -GarageCond,-BsmtExposure,
+                                     -BsmtQual,-BsmtFinType1,
+                                     -MasVnrType,
+                                     -MSZoning,-Functional,
+                                     -Exterior1st,-Exterior2nd,
+                                     -KitchenQual)
+
+```
+
+
+```{r BsmtFinType1}
+df.BsmtFinType1 <- test.fac %>% select(-GarageType,-GarageFinish,
+                                     -GarageCond,-BsmtExposure,
+                                     -BsmtQual,-BsmtCond,
+                                     -MasVnrType,
+                                     -MSZoning,-Functional,
+                                     -Exterior1st,-Exterior2nd,
+                                     -KitchenQual)
+
+```
+
+
+```{r MasVnrType}
+df.MasVnrType <- test.fac %>% select(-GarageType,-GarageFinish,
+                                     -GarageCond,-BsmtExposure,
+                                     -BsmtQual,-BsmtCond,
+                                     -BsmtFinType1,
+                                     -MSZoning,-Functional,
+                                     -Exterior1st,-Exterior2nd,
+                                     -KitchenQual)
+```
+
+
+```{r MSZoning}
+df.MSZoning <- test.fac %>% select(-GarageType,-GarageFinish,
+                                 -GarageCond,-BsmtExposure,
+                                 -BsmtQual,-BsmtCond,
+                                 -BsmtFinType1,-MasVnrType,
+                                 -Functional,
+                                 -Exterior1st,-Exterior2nd,
+                                 -KitchenQual)
+```
+
+
+```{r Functional}
+df.Functional <- test.fac %>% select(-GarageType,-GarageFinish,
+                                     -GarageCond,-BsmtExposure,
+                                     -BsmtQual,-BsmtCond,
+                                     -BsmtFinType1,-MasVnrType,
+                                     -MSZoning,
+                                     -Exterior1st,-Exterior2nd,
+                                     -KitchenQual)
+```
+
+
+
+```{r Exterior1st}
+df.Exterior1st <- test.fac %>% select(-GarageType,-GarageFinish,
+                                     -GarageCond,-BsmtExposure,
+                                     -BsmtQual,-BsmtCond,
+                                     -BsmtFinType1,-MasVnrType,
+                                     -MSZoning,
+                                     -Functional,-Exterior2nd,
+                                     -KitchenQual)
+```
+
+
+```{r Exterior2nd}
+df.Exterior2nd <- test.fac %>% select(-GarageType,-GarageFinish,
+                                     -GarageCond,-BsmtExposure,
+                                     -BsmtQual,-BsmtCond,
+                                     -BsmtFinType1,-MasVnrType,
+                                     -MSZoning,-Functional,
+                                     -Exterior1st,-KitchenQual)
+```
+
+
+
+```{r KitchenQua}
+df.KitchenQual <- test.fac %>% select(-GarageType,-GarageFinish,
+                                     -GarageCond,-BsmtExposure,
+                                     -BsmtQual,-BsmtCond,
+                                     -BsmtFinType1,-MasVnrType,
+                                     -MSZoning,
+                                     -Functional,-Exterior1st,
+                                     -Exterior2nd)
+```
+
+
+
+
+
+## Usando o Random Forest
+
+
+```{r - fitcontrol}
+set.seed(12345)
+fitControl <- trainControl(method="cv", 
+                           number=3, 
+                           savePredictions = 'final',
+                           classProbs= F, 
+                           summaryFunction = multiClassSummary)
+```
+
+
+```{r rf-GarageType, message=FALSE, warning=FALSE}
+set.seed(12345)
+# Train the model using rf
+rf.MSZoning = train(MSZoning ~ ., data= na.omit(df.MSZoning), 
+                                      tuneLength=5,trControl = fitControl,method='rf')
+
+rf.Functional = train(Functional ~ ., data= na.omit(df.Functional), 
+                                      tuneLength=5,trControl = fitControl,method='rf')
+
+rf.Exterior1st = train(Exterior1st ~ ., data= na.omit(df.Exterior1st), 
+                                      tuneLength=5,trControl = fitControl,method='rf')
+
+rf.Exterior2nd = train(Exterior2nd ~ ., data= na.omit(df.Exterior2nd), 
+                                      tuneLength=5,trControl = fitControl,method='rf')
+
+rf.KitchenQual = train(KitchenQual ~ ., data= na.omit(df.KitchenQual), 
+                                      tuneLength=5,trControl = fitControl,method='rf')
+```
+
+A função abaixo automatiza o processo de impute das categoricas nos valores nulos de cada variável.
+
+```{r funcao-impute}
+f.pred <- function(fac,df.var,rf.model,var){ 
+
+  new.df <- df.var[is.na(df.var[,var]),!(names(df.var) %in% var)]
+  pred_rf <- predict(rf.model, newdata =  new.df)
+  fac[is.na(fac[,var]),var] <- pred_rf
+
+  return(fac)
+}
+```
+
+# Colocando tudo em listas
+
+```{r df.vars-rf.vars-listas}
+list.rfvars <- list(rf.GarageType,rf.GarageFinish,
+                    rf.GarageCond,rf.BsmtExposure,
+                    rf.BsmtQual,rf.BsmtCond,
+                    rf.BsmtFinType1,rf.MasVnrType,
+                    rf.MSZoning,rf.Functional,
+                    rf.Exterior1st,rf.Exterior2nd,rf.KitchenQual)
+
+list.dfvars <- list(df.GarageType,df.GarageFinish,
+                    df.GarageCond,df.BsmtExposure,
+                    df.BsmtQual,df.BsmtCond,
+                    df.BsmtFinType1,df.MasVnrType,
+                    df.MSZoning,df.Functional,
+                    df.Exterior1st,df.Exterior2nd,df.KitchenQual)
+
+vars <- c('GarageType','GarageFinish',
+          'GarageCond','BsmtExposure',
+          'BsmtQual','BsmtCond',
+          'BsmtFinType1','MasVnrType',
+          'MSZoning','Functional','Exterior1st',
+          'Exterior2nd','KitchenQual')
+```
+
+Imputando os valores categóricos
+
+```{r impute-vategorico-vars}
+
+f.pred(testeA,df.GarageFinish,rf.GarageFinish,'GarageFinish')
+
+testeA <- test.fac
+
+for(j in 1:length(vars)) testeA <- f.pred(testeA,list.dfvars[[j]],list.rfvars[[j]],vars[j])
+```

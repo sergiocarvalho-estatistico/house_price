@@ -1,0 +1,2 @@
+"0","df.str <- df.train[,unlist(tipo) %in% ""character""]"
+"0","df.str"

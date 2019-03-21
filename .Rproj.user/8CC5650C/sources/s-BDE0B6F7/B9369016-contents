@@ -1,0 +1,566 @@
+---
+title: "House Price - Análise Exploratória de Dados"
+author: "Sérgio Carvalho"
+date: "`r format(Sys.Date(), '%d %B, %Y')`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    highlight: zenburn 
+    code_folding: show
+    style_body: justify
+    df_print: paged
+    number_sections: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+editor_options: 
+    chunk_output_type: inline
+---
+
+
+```{r options-chunk, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      eval = TRUE, 
+                      message = FALSE,
+                      warning = FALSE, 
+                      include = TRUE,
+                      fig.path = "figures/")
+```
+
+
+```{r pacotes-selecionados, include=F}
+
+# Pacotes Utilizados 
+
+  suppressMessages(library(MASS))
+  suppressMessages(library(tidyverse))
+  suppressMessages(library(readr))
+  suppressMessages(library(dplyr))
+  suppressMessages(library(data.table))
+  suppressMessages(library(readxl))
+  suppressMessages(library(ggplot2))
+  suppressMessages(library(plotly))
+  suppressMessages(library(scales))
+  suppressMessages(library(tidyr))
+  suppressMessages(library(lubridate))
+  suppressMessages(library(ggpubr))
+  suppressMessages(library(corrplot)) 
+  suppressMessages(library(lattice))
+  suppressMessages(library(latticeExtra))
+  
+```
+
+# Objetivos
+
+  * Qual o comportamento da variável resposta ?
+  * As proporções e distribuições das variáveis estão equilibradas nos dados de treino e teste ?
+  * Quais variáveis estão fortemente correlacionadas ?
+  * Qual a métrica usada para verificar a correlação ? 
+  * Quais variáveis tem maior influência discriminatória sob a variável resposta.
+  * Para quais intervalos de determinadas variáveis tenho maior diferença no valor variável resposta ?
+  * Faz sentido discretizá-las ?
+  * Faz sentido agrupá-las ?
+  * Definindo o analytic-base-table (abt)
+
+
+
+# Conjuntos de dados
+
+## Dados de treinamento
+
+```{r read-dftrain}
+df.train <- fread('../outputs/df.train.csv', 
+                     sep=",", 
+                     showProgress = FALSE)[,-1] %>%
+                     data.frame(stringsAsFactors = T) %>% 
+                     select(Id,SalePrice,everything())  
+```
+
+# Transformando o tipo das variáveis 
+
+Convertendo as variáveis tipo string em categóricas.
+
+```{r convert-string-to-categorical}
+tipo <- lapply(df.train,class)
+df.train[,unlist(tipo) != 'integer'] <- data.frame(apply(df.train[,unlist(tipo)!='integer'],2,factor))
+df.train
+```
+
+
+## Dados de teste
+
+```{r read-dftest}
+df.test <- fread('../outputs/df.test.csv',sep=",", 
+                     showProgress = FALSE)[,-1] %>%
+                     data.frame(stringsAsFactors = T)
+```
+
+# Transformando o tipo das variáveis 
+
+Convertendo as variáveis tipo string em categóricas.
+
+```{r convert-string-to-categorical-test}
+tipo <- lapply(df.test,class)
+df.test[,unlist(tipo) != 'integer'] <- data.frame(apply(df.test[,unlist(tipo)!='integer'],2,factor))
+df.test
+```
+
+
+# A distribuição da variável resposta.
+
+```{r distr-target,fig.width=15,fig.height=8}
+p0 <- ggdensity(df.train, x = "SalePrice", 
+          fill = "#0073C2FF", color = "black",
+          add = "mean", rug = TRUE) +
+          labs(title = 'Distribuição da densidade da variável SalePrice') +
+          theme_dark()
+
+p1 <- ggplot(df.train, aes(x = SalePrice)) + 
+      geom_histogram(bins = 100, 
+                     color = "black", 
+                     fill = "#0073C2FF") +
+      labs(title = 'Distribuição de frequência da variável SalePrice') +
+      theme_dark() 
+
+
+gridExtra::grid.arrange(p0,p1,nrow = 1)
+```
+
+Observe que há uma assimetria da distribuição do preço de venda com uma ascentuada cauda a direita. Ou seja, há poucos imóveis com preço muito de alto, o que é de se esperar, assim como há poucos imóveis com preço muito baixos. Essas variações do preço de venda devem estar relacionadas a fatores como: 
+
+  * Imóveis de alto padrão
+  * Imóveis de médio padrão
+  * Imóveis de baixo padrão   
+
+E certamente entre as variáveis explicativas encontraremos as que discriminam essas variações.
+
+
+# Conjunto de Dados Equilibrados
+
+Para que um modelo construído sobre os dados de treino garanta sua performance sobre os dados de teste, devemos nos preocurar em garantir que em ambos os conjuntos de dados exista um equilíbrio na distribuição e proporção de suas variáveis, caso contrário não há garantia quanto a performance, alías este é um dos grandes equívocos cometidos por muitas empresas.  
+
+Garantir que os dados existam dentro de um range faz parte da política data-drive de uma empresa que deseja ter sucesso em seus projetos de analytics.  
+
+# Trabalhando com Dados do Tipo inteiro 
+
+```{r train-summary}
+df.train_int <- df.train[,unlist(lapply(df.train,is.integer))] %>%
+                                        select(-Id,-SalePrice)
+df.test_int  <- df.test[,unlist(lapply(df.test,is.integer))] %>% 
+                                        select(-Id)
+```
+
+## Teste Kolmogorov Smirnov (KS)
+
+O teste de kolmorov Smirnov, teste KS, é altamente recomendado para testar a hipótese de igualdade entre duas distribuições, pois retorna a distância média, estatística Dn, obtida de cada quantil das distribuições empírica dos dados. 
+
+Pensando na produtividades implementei o código abaixo que visa acelerar o processo de testar a igualdade entre as distribuições das variáveis.
+
+### Crio a matriz ks.mat
+
+```{r crio-a-matrix-ksmat}
+ks.mat <- matrix(NA,ncol = 3,nrow = 0,byrow = T)
+colnames(ks.mat) <- c('variavel','dn','p_valor')
+```
+
+### Calculo as estatística do teste
+
+```{r ,message=FALSE, warning=FALSE}
+for(var in names(df.test_int[,-1])){
+  
+    # output do test ks
+    estat.ks <-  ks.test(df.train_int[,var],df.test_int[,var])
+      
+    # atribuição da estatistica Dn a variavel d
+    d <- as.numeric(unlist(round(estat.ks$statistic,4)))
+    # retorna o p-value em p
+    pv <- round(estat.ks$p.value,4)
+    
+    # constrói a tabela ks.mat com as estatísticas obtidas
+    ks.mat <- rbind(ks.mat,c(variavel = var,dn = d ,p_valor = pv))
+
+}
+```
+
+considerando os números de linhas de nossas amostras o nível de significância da estatística Dn é dado por.
+
+$$ \dfrac{1.36}{\sqrt{n}} $$
+
+```{r nivel-sig-dn}
+round(1.36/sqrt(nrow(df.train_int)),4)
+round(1.36/sqrt(nrow(df.test_int)),4)
+```
+
+
+### Construo um dataframe ordenado
+
+```{r}
+data.frame(variavel = as.character(ks.mat[,1]),
+           dn = as.numeric(ks.mat[,2]),
+           p_valor = as.numeric(ks.mat[,3])) %>%
+           arrange(desc(dn))
+```
+
+Esses resultados nos mostram que não há disferença estatística para todas as variáveis considerandos os conjuntos de dados de treino e teste, no entanto, os níveis de significância das variáveis X2ndFlrSF, GrLivArea, TotRmsAbvGrd e LotArea ficaram mais próximos do threshold 0.0374, iremos investigá-las.
+
+
+## Summary nas variáveis
+
+
+```{r summary-vars-train}
+df.train_int %>% 
+  select(X2ndFlrSF,GrLivArea,
+        TotRmsAbvGrd,LotArea) %>% 
+  summary 
+```
+
+
+```{r summary-vars-test}
+df.test_int %>% 
+  select(X2ndFlrSF,GrLivArea,
+        TotRmsAbvGrd,LotArea) %>% 
+  summary
+```
+
+Oberve que a variável LotArea no conjunto de treino possui um valor máximo de 215245 enquanto que no conjunto de teste seu valor máximo é 51974, essa variação modificou a posição das medianas nos conjuntos de dados, o que pode implicar em outliers e comprometer a performance do nosso futuro modelo preditivo. 
+
+### Razão entre máximos 
+
+```{r max-LotAre}
+round(max(df.train_int$LotArea)/max(df.test_int$LotArea),2)
+```
+
+
+## Plot ECDF para LotArea 
+
+A distribuição empírica acumulada (ecdf) nos ajuda a visualizar se há diferenças entre duas variáveis, por sorte no nosso caso não há. 
+
+```{r fig.width=15,fig.height=5}
+ecdfplot(~ df.train_int$LotArea + df.test_int$LotArea, 
+           auto.key=list(space='bottom',col = c('red','blue')), 
+           col = c('red','blue'), 
+           lwd = c(2,3), 
+           xlab =" ",ylab = 'F(x)',
+           main = 'Distribuição Empírica Acumulada')
+```
+
+Note que variável LotArea na amostra de treinamento tem valores extremos em relação a amostra de teste.
+
+## Boxplot para LotArea
+
+```{r boxplot-lot-area, fig.width=15,fig.height=5}
+boxplot(df.train_int$LotArea,
+        df.test_int$LotArea, 
+        main = 'LotArea', 
+        xlab = 'treino-teste')
+```
+
+Existem quantos pontos da variável LotArea na amostra de treino são maiores que o ponto máximo na amostra de teste ?
+
+```{r train-maiorque-teste}
+df.train_int$LotArea[df.train_int$LotArea > max(df.test_int$LotArea)]
+```
+
+veja que são apenas 10 linhas em 1338, aproximadamente 0.75%, de modo que podemos remove-las sem comprometer o volume de dados.
+
+### Boxplot para o mesmo valor máximo 
+
+```{r new-boxplot-lot-area, fig.width=15,fig.height=5}
+boxplot(df.train_int$LotArea[df.train_int$LotArea <= max(df.test_int$LotArea)],
+        df.test_int$LotArea, 
+        main = 'LotArea', 
+        xlab = 'treino-teste')
+```
+
+variáveis com distruições equilibradas.
+
+## Boxplots para X2ndFlrSF
+
+```{r fig.width=15,fig.height=5}
+par(mfrow=c(1,2))
+df.train_int %>% 
+  select(X2ndFlrSF) %>% 
+  boxplot(main = 'X2ndFlrSF', 
+          xlab = 'amostra treino', 
+          ylim = c(0,max(df.train_int$X2ndFlrSF)))
+df.test_int %>% 
+  select(X2ndFlrSF) %>% 
+  boxplot(main = 'X2ndFlrSF', 
+          xlab = 'amostra teste', 
+          ylim = c(0,max(df.train_int$X2ndFlrSF)))
+```
+
+
+## Boxplots para GrLivArea
+
+```{r fig.width=15,fig.height=5}
+par(mfrow=c(1,2))
+df.train_int %>% 
+  select(GrLivArea) %>% 
+  boxplot(main = 'GrLivArea', 
+          xlab = 'amostra treino',
+          ylim = c(0,max(df.train_int$GrLivArea)))
+df.test_int %>% 
+  select(GrLivArea) %>% 
+  boxplot(main = 'GrLivArea', 
+          xlab = 'amostra teste', 
+          ylim = c(0,max(df.train_int$GrLivArea)))
+```
+
+
+## Boxplots para TotRmsAbvGrd
+
+```{r fig.width=15,fig.height=5}
+par(mfrow=c(1,2))
+df.train_int %>% 
+  select(TotRmsAbvGrd) %>% 
+  boxplot(main = 'TotRmsAbvGrd', 
+          xlab = 'amostra treino',
+          ylim = c(0,max(df.train_int$TotRmsAbvGrd)))
+df.test_int %>% 
+  select(TotRmsAbvGrd) %>% 
+  boxplot(main = 'TotRmsAbvGrd', 
+          xlab = 'amostra teste',
+          ylim = c(0,max(df.train_int$TotRmsAbvGrd)))
+```
+
+### Removendo linhas no df.train
+
+Como vimos temos apenas 10 linhas para serem removidas para variável LotAarea no conjunto de treino, ficamos um 1328 linhas em nosso df.train.  
+
+```{r remove-rows-lot-area-dftrain}
+df.train <- df.train %>% filter(LotArea <= max(df.test_int$LotArea))
+```
+
+
+# Trabalhando com Dados do Tipo Categórico 
+
+```{r vars-categoricas-train-test}
+df.train_fac <- df.train[,unlist(lapply(df.train,is.factor))] 
+df.test_fac  <-  df.test[,unlist(lapply(df.test,is.factor))] 
+```
+
+
+## Analisando a Distribuição das Proporções
+
+Para analisar as proporções das classes em cada variável categórica, criei a função f.prop que me retorna o resumo do comparativo do número de cada classe da variável, suas porcentagens e a diferença percentual que cada classe possui em relação as amostras de treino e teste.    
+
+```{r funcao-resume-proporcao}
+f.prop <- function(fac.train,fac.test,var){
+
+  proptrain <- count(fac.train,eval(parse(text = var))) %>% 
+                   arrange(desc(n)) %>%
+                   mutate(perc.train = round(100*n/sum(n),2))
+  
+  names(proptrain) <- c(var,'n.train','perc.train')
+  
+  proptest <- count(fac.test,eval(parse(text = var))) %>% 
+                   arrange(desc(n)) %>%
+                   mutate(perc.test = round(100*n/sum(n),2))
+  
+  names(proptest) <- c(var,'n.test','perc.test')
+  
+  df.prop <- left_join(proptrain,proptest, by = var)[,c(1,2,4,3,5)] %>%
+                            mutate(dif.perc = perc.train-perc.test)
+  
+  return(df.prop)
+}
+```
+
+
+Somente farei algum comentário caso perceba alguma discrepância nas proporções das classes de alguma variável. 
+
+### Analise das Vars Categóricas 
+
+```{r vars-categoricas-1-5}
+for(j in 1:5){ 
+  
+ print(f.prop(df.train_fac,df.test_fac,names(df.train_fac)[j]))
+  
+ cat('\n\n')    
+ 
+}  
+```
+
+Veja que no conjunto de teste para a variável Utilities não há a classe NoSeWa e como há apenas uma linhas com essa classe no conjunto de treino, irei remove-lá.
+
+```{r vars-categoricas-6-10}
+for(j in 6:10){ 
+  
+ print(f.prop(df.train_fac,df.test_fac,names(df.train_fac)[j]))
+ cat('\n\n')    
+ 
+}
+```
+
+Classes ausentes no conjunto de dados de teste:
+
+ * Condition2 
+ * * RRNn, RRAe e RRAn
+
+
+```{r vars-categoricas-11-15}
+for(j in 11:15){ 
+  
+ print(f.prop(df.train_fac,df.test_fac,names(df.train_fac)[j]))
+ cat('\n\n')    
+ 
+}
+```
+
+Classes ausentes no conjunto de dados de teste:
+
+  * HouseStyle  
+  * * 2.5Fin, remover 6 linhas    
+  * RoofMatl
+  * * Membran, Metal, Roll , remover 3 linhas  
+  * Exterior1st 
+  * * Stone, CBlock, ImStucc , remover 3 linhas   
+  
+
+```{r vars-categoricas-16-20}
+for(j in 16:20){ 
+  
+ print(f.prop(df.train_fac,df.test_fac,names(df.train_fac)[j]))
+ cat('\n\n')    
+ 
+}
+```
+
+Classes ausentes no conjunto de dados de teste:
+
+  * Exterior2nd  
+  * * AsphShn, Stone, CBlock, Other     
+
+
+
+```{r ExterCond}
+count(df.train_fac,ExterCond)
+count(df.test_fac,ExterCond)
+```
+
+Na amostra de teste a classe Po da variável ExterCond não existe na amostra de treino.
+
+
+```{r vars-categoricas-21-25}
+for(j in 21:25){ 
+  
+ print(f.prop(df.train_fac,df.test_fac,names(df.train_fac)[j]))
+ cat('\n\n')    
+ 
+}
+```
+
+
+```{r vars-categoricas-26-30}
+for(j in 26:30){ 
+  
+ print(f.prop(df.train_fac,df.test_fac,names(df.train_fac)[j]))
+ cat('\n\n')    
+ 
+}
+```
+
+
+Classes ausentes no conjunto de dados de teste:
+
+  * Heating  
+  * * Grav, OthW     
+  * Electrical
+  * * Mix 
+
+
+
+```{r vars-categoricas-31-35}
+for(j in 31:35){ 
+  
+ print(f.prop(df.train_fac,df.test_fac,names(df.train_fac)[j]))
+ cat('\n\n')    
+ 
+}
+```
+
+
+Classes ausentes no conjunto de dados de teste:
+
+  * Functional  
+  * * Sev     
+  * GarageQual
+  * * Ex 
+
+
+```{r vars-categoricas-36-38}
+for(j in 36:38){ 
+  
+ print(f.prop(df.train_fac,df.test_fac,names(df.train_fac)[j]))
+ cat('\n\n')    
+ 
+}
+```
+
+## Resumindo as informações obtidas.
+
+Quais as categorias que serão removidas de quais variáveis e amotras ?
+
+   * Condition2  
+   * * RRNn, RRAe e RRAn | df.train
+   * HouseStyle  
+   * * 2.5Fin | df.train    
+   * RoofMatl
+   * * Membran, Metal, Roll | df.train  
+   * Exterior1st 
+   * * Stone, CBlock, ImStucc | df.train   
+   * Exterior2nd  
+   * * AsphShn, Stone, CBlock, Other | df.train       
+   * ExterCond
+   * * Po | df.test
+   * Heating  
+   * * Grav, OthW | df.train   
+   * Electrical
+   * * Mix | df.train
+   * Functional  
+   * * Sev     | df.train
+   * GarageQual
+   * * Ex    | df.train
+
+
+# Obtendo um novo df.train
+
+Para remover os níveis das variáveis categóricas precisamos converte-las para o tipo string. 
+
+```{r convert-to-string-df.train}
+tipo <- lapply(df.train,class)
+df.train[,unlist(tipo) != 'integer'] <- 
+data.frame(lapply(df.train[,unlist(tipo)!='integer'],function(x) as.character(unlist(x))), stringsAsFactors = F) 
+```
+
+## Filtrando linhas no df.train
+
+```{r filter-rows-dftrain}
+df.train <- df.train %>% 
+            filter(!(Condition2 %in% c('RRNn','RRAe','RRAn')),
+                   !(HouseStyle %in% c('2.5Fin')),
+                   !(RoofMatl %in% c('Membran','Metal','Roll')),
+                   !(Exterior1st %in% c('Stone','CBlock','ImStucc')),
+                   !(Exterior2nd %in% c('AsphShn','Stone','CBlock','Other')),
+                   !(Heating %in% c('Grav','OthW')),
+                   !(Electrical %in% c('Grav','OthW')),
+                   !(Functional %in% c('Sev')),
+                   !(GarageQual %in% c('Ex')))
+df.train
+```
+   
+## Filtrando linhas no df.test
+
+```{r}
+df.test$ExterCond <- as.character(unlist(df.test$ExterCond))
+df.test <- df.test %>% filter(ExterCond != 'Po')
+df.test
+```
+
+## Exportando os data frames
+
+```{r export-datasets}
+write.csv(df.train,'../outputs/model.train.csv')
+write.csv(df.test,'../outputs/model.test.csv')
+```

@@ -1,0 +1,4 @@
+"0","df.fac <- df.fac %>% "
+"0","            select(-PoolQC,-MiscFeature,"
+"0","                   -Alley,-Fence,-FireplaceQu)"
+"0","df.fac"

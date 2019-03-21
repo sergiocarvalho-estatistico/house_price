@@ -1,0 +1,1 @@
+"0","plot(fit.model$residuals, pch = 20, type = 'p', main = 'Resíduos')"

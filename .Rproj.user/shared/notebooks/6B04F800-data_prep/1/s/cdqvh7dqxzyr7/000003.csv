@@ -1,0 +1,2 @@
+"0","test.int <- test.int[,c('Id',boruta_signif)] %>%"
+"0","                        select(-LotFrontage)"

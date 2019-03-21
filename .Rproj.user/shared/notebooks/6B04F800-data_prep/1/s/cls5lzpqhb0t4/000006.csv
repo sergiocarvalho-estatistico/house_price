@@ -1,0 +1,12 @@
+"0","lapply(df.train,class) %>%"
+"0","  unlist %>% as.character() %>% table"
+"1",".
+"
+"1","character "
+"1","  integer "
+"1","
+"
+"1","       43 "
+"1","       38 "
+"1","
+"

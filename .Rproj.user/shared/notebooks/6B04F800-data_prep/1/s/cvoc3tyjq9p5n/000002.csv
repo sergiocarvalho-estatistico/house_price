@@ -1,0 +1,3 @@
+"0","df.int <- df.int %>% "
+"0","            select(-LotFrontage)"
+"0","df.int"
