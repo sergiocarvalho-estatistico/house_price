@@ -1,8 +1,0 @@
-"0","set.seed(2510)"
-"0","boruta.int <- Boruta(SalePrice ~ ., data=na.omit(df.int[,-1]), doTrace=2)  # perform Boruta search"
-"2"," 1. run of importance source...
-"
-"2"," 2. run of importance source...
-"
-"2","
-"

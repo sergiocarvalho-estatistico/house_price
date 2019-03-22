@@ -1,0 +1,4 @@
+"0","boxplot(df.train.num$LotArea,"
+"0","        df.test.num$LotArea, "
+"0","        main = 'LotArea', "
+"0","        xlab = 'treino-teste')"

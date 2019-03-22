@@ -1,0 +1,1 @@
+"0","cols.fac <- names(boruta_fac$finalDecision[boruta_fac$finalDecision %in% c(""Confirmed"", ""Tentative"")])  "

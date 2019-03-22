@@ -1,2 +1,0 @@
-"0","df.int <- df.train[,unlist(tipo) %in% ""integer""]"
-"0","df.int"

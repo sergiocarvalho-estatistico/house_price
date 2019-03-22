@@ -57,7 +57,7 @@ knitr::opts_chunk$set(echo = TRUE,
 
 
 ```{r read-modeltrain, message=FALSE, warning=FALSE}
-model.train <- fread('../outputs/model.train.csv', 
+model.train <- fread('../outputs/df.train.csv', 
                      sep=",", 
                      showProgress = FALSE)[,-1] %>%
                      data.frame(stringsAsFactors = T) %>% 
@@ -67,8 +67,8 @@ model.train <- fread('../outputs/model.train.csv',
 
 
 ```{r convert-string-to-categorical}
-tipo <- lapply(model.train,class)
-model.train[,unlist(tipo) != 'integer'] <- data.frame(apply(model.train[,unlist(tipo)!='integer'],2,factor))
+model.train[,unlist(lapply(model.train,class)) %in% 'character'] <- data.frame(apply(model.train[,unlist(lapply(model.train,class)) %in% 'character'],2,factor))
+
 model.train
 ```
 
@@ -78,22 +78,22 @@ model.train
 Obs: Esta parte do código ficará comentada para o markdown rodar mais rápido e para ilustrar o resultado irei apenas colocar a imagem da sugestão de seleção de variáveis feita pelo boruta, caso queiram rodar o código é só descomenta-lo.
 
 
-<!-- ```{r fig.width=15, fig.height=6} -->
-<!-- set.seed(2510) -->
-<!-- boruta_output <- Boruta(SalePrice ~ ., data=model.train[,-1], doTrace=2)  # perform Boruta search -->
-<!-- ``` -->
+```{r fig.width=15, fig.height=6}
+set.seed(2510)
+boruta_output <- Boruta(SalePrice ~ ., data=model.train[,-1], doTrace=2)  # perform Boruta search
+```
 
 
-<!-- ```{r} -->
-<!-- boruta_signif <- names(boruta_output$finalDecision[boruta_output$finalDecision %in% c("Confirmed", "Tentative")])  # collect -->
-<!-- print(boruta_signif) -->
-<!-- ``` -->
+```{r}
+boruta_signif <- names(boruta_output$finalDecision[boruta_output$finalDecision %in% c("Confirmed", "Tentative")])  # collect
+print(boruta_signif)
+```
 
-<!-- ## Plot da importância da variável -->
+## Plot da importância da variável
 
-<!-- ```{r fig.width=15, fig.height=6} -->
-<!-- plot(boruta_output, cex.axis=.7, las=2, xlab="", main="Variable Importance") -->
-<!-- ``` -->
+```{r fig.width=15, fig.height=6}
+plot(boruta_output, cex.axis=.7, las=2, xlab="", main="Variable Importance")
+```
 
 ![selecao-de-variaveis](../imagens/select_vars_boruta.png)
 
@@ -125,17 +125,17 @@ summary(fit.model)
 ## Teste Qui-Quadrado
 
 ```{r test-qui-quadrado}
-round(1-pchisq(13.611,1192, ncp = 0, lower.tail = TRUE, log.p = FALSE),3)
+round(1-pchisq(18.742,1345, ncp = 0, lower.tail = TRUE, log.p = FALSE),3)
 ```
 
-O desvio do modelo foi de D($y$;$\hat{\mu}$) = 13.611, com 1192 graus de liberdade, que leva a P = 1,00 e indica um ajuste adequado.
+O desvio do modelo foi de D($y$;$\hat{\mu}$) = 18.742, com 1345 graus de liberdade, que leva a P = 1,00 e indica um ajuste adequado.
 
 
 # Dados de teste
 
 
 ```{r read-modeltest, message=FALSE, warning=FALSE}
-model.test <- fread('../outputs/model.test.csv', 
+model.test <- fread('../outputs/df.test.csv', 
                      sep=",", 
                      showProgress = FALSE)[,-1] %>%
                      data.frame(stringsAsFactors = T) %>% 
@@ -145,7 +145,7 @@ model.test <- fread('../outputs/model.test.csv',
 
 ```{r convert-string-to-categorical-test}
 tipo <- lapply(model.test,class)
-model.test[,unlist(tipo) != 'integer'] <- data.frame(apply(model.test[,unlist(tipo)!='integer'],2,factor))
+model.test[,unlist(tipo) %in% 'character'] <- data.frame(apply(model.test[,unlist(tipo) %in% 'character'],2,factor))
 model.test
 ```
 
@@ -234,7 +234,7 @@ plot(fit.model$data$SalePrice,
      type = 'p',
      xlab = 'SalePrice',
      ylab = 'Valores Ajustados',
-     main = 'SalesPrice vs Valores Preditos')
+     main = 'SalesPrice vs Valores Ajustados')
 abline(0,1)
 legend('topleft',legend = c('SalePrice','Valores ajustados'),col = c('blue','red'), lty = c(2,2) )
 ```
@@ -309,7 +309,7 @@ plot(predicao$predicao,
 O QQ-plot pode nos ajudar a ter uma idéia de como será o resultados da predição, aparemtemente será bom. 
 
 ```{r qqplot, fig.width=15,fig.height=5}
-qqplot(sort(fit.model$data$SalePrice)[1:1318],
+qqplot(sort(fit.model$data$SalePrice)[1:length(predicao$predicao)],
        sort(predicao$predicao),
        main = 'QQ-plot',
        ylab = 'Predição',

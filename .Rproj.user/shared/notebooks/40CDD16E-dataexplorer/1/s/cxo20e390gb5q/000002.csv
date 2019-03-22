@@ -1,0 +1,5 @@
+"0","round(max(df.train.num$LotArea)/max(df.test.num$LotArea),2)"
+"1","[1]"
+"1"," 2.17"
+"1","
+"

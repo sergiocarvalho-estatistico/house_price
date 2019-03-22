@@ -1,0 +1,8 @@
+"0","df.MasVnrType <- test.fac %>% "
+"0","                  select(-GarageType,-GarageFinish,"
+"0","                         -GarageCond,-BsmtExposure,"
+"0","                         -BsmtQual,-BsmtCond,"
+"0","                         -BsmtFinType1,"
+"0","                         -MSZoning,-Functional,"
+"0","                         -Exterior1st,-Exterior2nd,"
+"0","                         -KitchenQual)"

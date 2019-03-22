@@ -1,0 +1,8 @@
+"0","(n.outliers <- df.train.num$LotArea[df.train.num$LotArea > max(df.test.num$LotArea)])"
+"1","[1]"
+"1"," 14.87619"
+"1"," 20.51125"
+"1"," 15.44325"
+"1"," 10.48286"
+"1","
+"

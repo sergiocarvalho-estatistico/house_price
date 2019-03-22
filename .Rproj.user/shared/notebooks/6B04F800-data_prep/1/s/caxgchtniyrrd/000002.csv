@@ -1,2 +1,0 @@
-"0","df.cat <- lapply(df.str,factor) %>% data.frame()"
-"0","df.cat"

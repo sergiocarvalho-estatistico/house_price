@@ -1,4 +1,0 @@
-"0","df.MasVnrType <- df.fac %>% select(-GarageType,-GarageFinish,"
-"0","                                     -GarageCond,-BsmtExposure,"
-"0","                                     -BsmtQual,-BsmtCond,"
-"0","                                     -BsmtFinType1,-Electrical)"

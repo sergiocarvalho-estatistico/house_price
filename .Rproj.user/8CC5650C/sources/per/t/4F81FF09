@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1553223922829.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1261456975",
+    "id" : "4F81FF09",
+    "lastKnownWriteTime" : 1553226802,
+    "last_content_update" : 1553226802270,
+    "path" : "D:/houseprice/dataexploration/dataexplorer.Rmd",
+    "project_path" : "dataexploration/dataexplorer.Rmd",
+    "properties" : {
+        "chunk_output_type" : "inline",
+        "cursorPosition" : "375,0",
+        "scrollLine" : "370"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

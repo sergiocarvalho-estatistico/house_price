@@ -1,0 +1,2 @@
+"0","df.train_fac <- df.train[,unlist(lapply(df.train,is.character))] "
+"0","df.test_fac  <-  df.test[,unlist(lapply(df.test,is.character))] "

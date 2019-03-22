@@ -1,7 +1,0 @@
-"0","df.KitchenQual <- test.fac %>% select(-GarageType,-GarageFinish,"
-"0","                                     -GarageCond,-BsmtExposure,"
-"0","                                     -BsmtQual,-BsmtCond,"
-"0","                                     -BsmtFinType1,-MasVnrType,"
-"0","                                     -MSZoning,"
-"0","                                     -Functional,-Exterior1st,"
-"0","                                     -Exterior2nd)"

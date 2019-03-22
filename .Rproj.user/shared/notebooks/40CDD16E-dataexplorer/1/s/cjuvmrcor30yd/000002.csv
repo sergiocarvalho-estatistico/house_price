@@ -1,0 +1,2 @@
+"0","ks.mat <- matrix(NA,ncol = 3,nrow = 0,byrow = T)"
+"0","colnames(ks.mat) <- c('variavel','dn','p_valor')"

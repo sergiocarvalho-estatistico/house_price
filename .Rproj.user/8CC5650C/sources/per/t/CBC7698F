@@ -1,0 +1,24 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1553208797368.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "500935469",
+    "id" : "CBC7698F",
+    "lastKnownWriteTime" : 1553223143,
+    "last_content_update" : 1553223143637,
+    "path" : "D:/houseprice/dataprep/dataprep_test.Rmd",
+    "project_path" : "dataprep/dataprep_test.Rmd",
+    "properties" : {
+        "chunk_output_type" : "inline",
+        "cursorPosition" : "396,0",
+        "scrollLine" : "385",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

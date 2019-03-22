@@ -1,0 +1,6 @@
+"0","par(mfrow=c(1,2))"
+"0","df.train.num %>% "
+"0","  select(GrLivArea) %>% "
+"0","  boxplot(main = 'GrLivArea', "
+"0","          xlab = 'amostra treino',"
+"0","          ylim = c(0,max(df.train.num$GrLivArea)))"

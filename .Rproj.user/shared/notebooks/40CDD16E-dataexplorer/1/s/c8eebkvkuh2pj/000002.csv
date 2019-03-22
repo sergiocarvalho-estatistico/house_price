@@ -1,0 +1,35 @@
+"0","df.train <- fread('../outputs/df.train.csv', "
+"0","                     sep="","", "
+"0","                     showProgress = FALSE)[,-1] %>%"
+"0","                     data.frame(stringsAsFactors = T) %>% "
+"0","                     select(Id,SalePrice,everything())  "
+"2","Error in fread(""../outputs/df.train.csv"", sep = "","", showProgress = FALSE)[,  : 
+  could not find function ""%>%""
+"
+"2","In addition: "
+"2","Warning messages:
+"
+"2","1: "
+"2","In readLines(con) :"
+"2","
+ "
+"2"," incomplete final line found on 'C:/Users/Sergio/Documents/R/win-library/3.5/rmdformats/rmarkdown/templates/html_clean/template.yaml'
+"
+"2","2: "
+"2","In readLines(con) :"
+"2","
+ "
+"2"," incomplete final line found on 'C:/Users/Sergio/Documents/R/win-library/3.5/rmdformats/rmarkdown/templates/html_docco/template.yaml'
+"
+"2","3: "
+"2","In readLines(con) :"
+"2","
+ "
+"2"," incomplete final line found on 'C:/Users/Sergio/Documents/R/win-library/3.5/rmdformats/rmarkdown/templates/material/template.yaml'
+"
+"2","4: "
+"2","In readLines(con) :"
+"2","
+ "
+"2"," incomplete final line found on 'C:/Users/Sergio/Documents/R/win-library/3.5/rmdformats/rmarkdown/templates/readthedown/template.yaml'
+"

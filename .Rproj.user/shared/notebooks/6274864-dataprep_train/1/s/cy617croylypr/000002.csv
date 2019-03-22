@@ -1,0 +1,6 @@
+"0","df.int1 <- predict(preProcess_missingdata_model, newdata = df.int[,-c(1,2)] )"
+"0","anyNA(df.int1)"
+"1","[1]"
+"1"," FALSE"
+"1","
+"

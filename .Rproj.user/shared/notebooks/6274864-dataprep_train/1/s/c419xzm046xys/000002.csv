@@ -1,0 +1,1 @@
+"0","df.int <- df.int[,c('Id',""SalePrice"",cols.int)]"

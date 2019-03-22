@@ -1,0 +1,5 @@
+"0","df.test.num %>% "
+"0","  select(GrLivArea) %>% "
+"0","  boxplot(main = 'GrLivArea', "
+"0","          xlab = 'amostra teste', "
+"0","          ylim = c(0,max(df.train.num$GrLivArea)))"

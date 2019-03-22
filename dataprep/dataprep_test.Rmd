@@ -1,0 +1,420 @@
+---
+title: "House Prices"
+sutitle: "Preparando o conjunto de dados de teste"
+author: "Sérgio Carvalho"
+date: "`r format(Sys.Date(), '%d %B, %Y')`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    lightbox: true
+    gallery: false
+    highlight: zenburn 
+    code_folding: show
+    style_body: justify
+    df_print: paged
+    number_sections: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+editor_options: 
+    chunk_output_type: inline
+---
+
+
+```{r options-chunk, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      eval = TRUE, 
+                      message = FALSE,
+                      warning = FALSE, 
+                      include = TRUE,
+                      fig.path = "figures/",
+                      fig.width = 15, 
+                      fig.height = 6)
+```
+
+
+```{r pacotes-selecionados, message=FALSE, warning=FALSE, include=F}
+
+  suppressMessages(library(MASS))
+  suppressMessages(library(tidyverse))
+  suppressMessages(library(readr))
+  suppressMessages(library(dplyr))
+  suppressMessages(library(data.table))
+  suppressMessages(library(readxl))
+  suppressMessages(library(ggplot2))
+  suppressMessages(library(plotly))
+  suppressMessages(library(scales))
+  suppressMessages(library(lubridate))
+  suppressMessages(library(reshape)) 
+  suppressMessages(library(Boruta))
+  suppressMessages(library(caret))
+  suppressMessages(library(skimr))
+  suppressMessages(library(RANN))
+
+```
+
+# Objetivos
+
+  * Número de variáveis: 81 
+  * Tipo de variáveis
+      * * Inteiras ou discretas: 
+      * * Numéricas ou double
+      * * Categóricas
+      * * Qualitativas
+      * Qualidade dos dados          
+      * * Quantidade de NA's por variável
+  * Criação de novas variáveis, se precisar
+  * Transformação das variáveis, se precisar
+
+
+# Conjunto de Dados de Teste
+
+Iremos realizar nos dados de teste as mesmas transformações aplicadas aos dados de treino.  
+
+```{r read-data-test}
+df.test <- data.table::fread('../dados/test.csv', 
+                             sep=",", 
+                             showProgress = FALSE)  %>% 
+            data.frame(stringsAsFactors = F)
+df.test
+```
+
+
+# Separando o conjunto de dados de teste pelo tipo.
+
+## Dados tipo inteiro
+
+```{r type-integer-test}
+test.int <- df.test[,unlist(lapply(df.test,class)) %in% "integer"]
+test.int
+```
+
+na amostra test.int também irei imputar dados.
+
+```{r}
+apply(is.na(test.int),2,function(x) round(100*sum(as.numeric(x))/length(x),2)) %>% 
+           sort(decreasing = T)
+```
+
+# Selecionando as variáveis
+
+Removendo as mesmas variáveis do conjunto de treinamento.
+
+```{r select-vars}
+cols.int <- readRDS('../outputs/cols.int.rds')
+test.int <- test.int[,c('Id',cols.int)] %>%
+                        select(-LotFrontage)
+```
+
+```{r imput-data-with-knn}
+preProcess_missingdata_model <- preProcess(test.int[,-1], method='knnImpute')
+preProcess_missingdata_model
+```
+
+
+Vamos agora usar esse modelo para prever os valores ausentes df.int
+
+```{r}
+test.int1 <- predict(preProcess_missingdata_model, newdata = test.int[,-1] )
+anyNA(test.int1)
+```
+
+dados imputados com sucesso!
+
+
+```{r}
+test.int <- data.frame(Id = test.int$Id,test.int1)
+```
+
+
+## Tranformando dados tipo string em categorical
+
+```{r type-str-test}
+test.fac <- df.test[,unlist(lapply(df.test,class)) %in% "character"] %>%
+                           apply(2,as.factor) %>% data.frame
+```
+
+
+removendo as mesmas colunas do conjunto de treino.
+
+```{r}
+test.fac <- test.fac %>% select(-PoolQC,-MiscFeature,
+                                -Alley,-Fence,-FireplaceQu)
+
+cols.fac <- readRDS('../outputs/cols.fac.rds')
+test.fac <- test.fac[,cols.fac]
+```
+
+verificando a porcentagem de valores nulos
+
+
+```{r percent-null-rows-test}
+apply(is.na(test.fac),2,function(x) round(100*sum(as.numeric(x))/length(x),2)) %>% 
+           sort(decreasing = T)
+```
+
+
+Novamente recorremos ao caret para imputar essas categorias. 
+
+
+Para construir um modelo que imput a categoria vamos retirar todas as variáveis que possuam alguma porcentagem de valores nulos e deixar somente uma delas em cada modelo. 
+
+## Criando os data frames
+
+
+```{r dfgaragetype}
+df.GarageType <- test.fac %>% 
+                  select(-GarageFinish,-GarageCond,
+                         -BsmtExposure,-BsmtQual,
+                         -BsmtCond,-BsmtFinType1,
+                         -MasVnrType,
+                         -MSZoning,-Functional,
+                         -Exterior1st,-Exterior2nd,
+                         -KitchenQual)
+```
+
+
+```{r GarageFinish}
+df.GarageFinish <- test.fac %>% 
+                    select(-GarageType,-GarageCond,
+                           -BsmtExposure,-BsmtQual,
+                           -BsmtCond,-BsmtFinType1,
+                           -MasVnrType,
+                           -MSZoning,-Functional,
+                           -Exterior1st,-Exterior2nd,
+                           -KitchenQual)
+```
+
+
+```{r GarageCond}
+df.GarageCond <- test.fac %>% 
+                  select(-GarageType,-GarageFinish,
+                         -BsmtExposure,-BsmtQual,
+                         -BsmtCond,-BsmtFinType1,
+                         -MasVnrType,
+                         -MSZoning,-Functional,
+                         -Exterior1st,-Exterior2nd,
+                         -KitchenQual)
+```
+
+
+```{r -BsmtExposure}
+df.BsmtExposure <- test.fac %>% 
+                    select(-GarageType,-GarageFinish,
+                           -GarageCond,-BsmtQual,
+                           -BsmtCond,-BsmtFinType1,
+                           -MasVnrType,
+                           -MSZoning,-Functional,
+                           -Exterior1st,-Exterior2nd,
+                           -KitchenQual)
+```
+
+
+```{r BsmtQual}
+df.BsmtQual <- test.fac %>% 
+                select(-GarageType,-GarageFinish,
+                       -GarageCond,-BsmtExposure,
+                       -BsmtCond,-BsmtFinType1,
+                       -MasVnrType,
+                       -MSZoning,-Functional,
+                       -Exterior1st,-Exterior2nd,
+                       -KitchenQual)
+```
+
+
+```{r BsmtCond}
+df.BsmtCond <- test.fac %>% 
+                select(-GarageType,-GarageFinish,
+                       -GarageCond,-BsmtExposure,
+                       -BsmtQual,-BsmtFinType1,
+                       -MasVnrType,
+                       -MSZoning,-Functional,
+                       -Exterior1st,-Exterior2nd,
+                       -KitchenQual)
+```
+
+
+```{r BsmtFinType1}
+df.BsmtFinType1 <- test.fac %>% 
+                    select(-GarageType,-GarageFinish,
+                           -GarageCond,-BsmtExposure,
+                           -BsmtQual,-BsmtCond,
+                           -MasVnrType,
+                           -MSZoning,-Functional,
+                           -Exterior1st,-Exterior2nd,
+                           -KitchenQual)
+```
+
+
+```{r MasVnrType}
+df.MasVnrType <- test.fac %>% 
+                  select(-GarageType,-GarageFinish,
+                         -GarageCond,-BsmtExposure,
+                         -BsmtQual,-BsmtCond,
+                         -BsmtFinType1,
+                         -MSZoning,-Functional,
+                         -Exterior1st,-Exterior2nd,
+                         -KitchenQual)
+```
+
+
+```{r MSZoning}
+df.MSZoning <- test.fac %>% 
+                  select(-GarageType,-GarageFinish,
+                         -GarageCond,-BsmtExposure,
+                         -BsmtQual,-BsmtCond,
+                         -BsmtFinType1,-MasVnrType,
+                         -Functional,
+                         -Exterior1st,-Exterior2nd,
+                         -KitchenQual)
+```
+
+
+```{r Functional}
+df.Functional <- test.fac %>% 
+                  select(-GarageType,-GarageFinish,
+                         -GarageCond,-BsmtExposure,
+                         -BsmtQual,-BsmtCond,
+                         -BsmtFinType1,-MasVnrType,
+                         -MSZoning,
+                         -Exterior1st,-Exterior2nd,
+                         -KitchenQual)
+```
+
+
+```{r Exterior1st}
+df.Exterior1st <- test.fac %>% 
+                    select(-GarageType,-GarageFinish,
+                           -GarageCond,-BsmtExposure,
+                           -BsmtQual,-BsmtCond,
+                           -BsmtFinType1,-MasVnrType,
+                           -MSZoning,
+                           -Functional,-Exterior2nd,
+                           -KitchenQual)
+```
+
+
+```{r Exterior2nd}
+df.Exterior2nd <- test.fac %>% 
+                    select(-GarageType,-GarageFinish,
+                           -GarageCond,-BsmtExposure,
+                           -BsmtQual,-BsmtCond,
+                           -BsmtFinType1,-MasVnrType,
+                           -MSZoning,-Functional,
+                           -Exterior1st,-KitchenQual)
+```
+
+
+```{r KitchenQua}
+df.KitchenQual <- test.fac %>% 
+                    select(-GarageType,-GarageFinish,
+                           -GarageCond,-BsmtExposure,
+                           -BsmtQual,-BsmtCond,
+                           -BsmtFinType1,-MasVnrType,
+                           -MSZoning,
+                           -Functional,-Exterior1st,
+                           -Exterior2nd)
+```
+
+criando um vetor com o nome das variáveis e uma lista com os data-frames criados.
+
+```{r varsnames-df-list}
+vars <- c('GarageType','GarageFinish',
+          'GarageCond','BsmtExposure',
+          'BsmtQual','BsmtCond',
+          'BsmtFinType1','MasVnrType',
+          'MSZoning','Functional','Exterior1st',
+          'Exterior2nd','KitchenQual')
+
+list.df <- list(df.GarageType,df.GarageFinish,
+                df.GarageCond,df.BsmtExposure,
+                df.BsmtQual,df.BsmtCond,
+                df.BsmtFinType1,df.MasVnrType,
+                df.MSZoning,df.Functional,
+                df.Exterior1st,df.Exterior2nd,df.KitchenQual)
+```
+
+A função abaixo automatiza o processo de impute das categoricas nos valores nulos de cada variável.
+
+```{r funcao-impute-fac}
+f.pred <- function(fac,df.var,rf.model,var){ 
+
+  new.df <- df.var[is.na(df.var[,var]),!(names(df.var) %in% var)]
+  pred_rf <- predict(rf.model, newdata =  new.df)
+  fac[is.na(fac[,var]),var] <- pred_rf
+
+  return(fac)
+}
+```
+
+
+## Usando a Caret e RandomForest
+
+Utilizarei o random forest como classificador para imputar as categorias faltantes.
+
+```{r - fitcontrol-fac}
+set.seed(12345)
+fitControl <- trainControl(method="cv", 
+                           number=3, 
+                           savePredictions = 'final',
+                           classProbs= F, 
+                           summaryFunction = multiClassSummary)
+```
+
+Construindos os modelos para imputar os valores nulos.
+
+
+```{r rf-GarageType-fac, message=FALSE, warning=FALSE}
+set.seed(12345)
+
+# Crio uma lista para armazenar os modelos
+rf.list <- list()
+
+for(j in 1:length(vars)){ 
+
+ # atribuo em df um df."variavel" sem os valor nulos       
+ df <- list.df[[j]] %>% na.omit()  
+
+ # treino esse df. no random-forest 
+ rf.list[[j]] <- train(eval(parse(text = paste(vars[j],'~.'))),
+                                      data = df, 
+                                      tuneLength=5,
+                                      trControl = fitControl,method='rf')
+
+ # imputo as categorias faltantes no valores nulos das variáveis
+ test.fac <- f.pred(test.fac,list.df[[j]],rf.list[[j]],vars[j])
+ 
+ cat(j,'  ')
+ 
+}
+```
+
+Será há algum valor nulos ?
+
+```{r values-nulos, fig.width=15, fig.height=7}
+anyNA(test.fac)
+```
+
+Imputação de dados realizada com sucesso !
+
+
+# Juntandos os data frames
+
+Jutando os dados tipo inteiros e categóricos.
+
+```{r bind-dfs-test}
+df.test <- bind_cols(test.int,test.fac)
+df.test
+```
+
+Agora nosso df.test encontra-se limpo e pronto para ser explorado.
+
+
+# Exportando os dados limpos
+
+```{r output-data-dftest}
+write.csv(df.test,'../outputs/df.test.csv')
+```
+
+

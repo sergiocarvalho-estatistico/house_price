@@ -1,0 +1,4 @@
+"0","test.fac <- test.fac %>% select(-PoolQC,-MiscFeature,"
+"0","                                -Alley,-Fence,-FireplaceQu)"
+"0","cols.fac <- readRDS('../outputs/cols.fac.rds')"
+"0","test.fac <- test.fac[,cols.fac]"
