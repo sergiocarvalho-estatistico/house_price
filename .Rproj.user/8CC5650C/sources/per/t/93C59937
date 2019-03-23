@@ -1,0 +1,24 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1553291494741.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1705660667",
+    "id" : "93C59937",
+    "lastKnownWriteTime" : 1553302982,
+    "last_content_update" : 1553303679390,
+    "path" : "D:/houseprice/modelling/modelagem.Rmd",
+    "project_path" : "modelling/modelagem.Rmd",
+    "properties" : {
+        "chunk_output_type" : "inline",
+        "cursorPosition" : "116,0",
+        "docOutlineVisible" : "0",
+        "scrollLine" : "97"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

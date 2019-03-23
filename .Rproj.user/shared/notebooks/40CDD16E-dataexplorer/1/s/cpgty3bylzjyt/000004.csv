@@ -1,0 +1,2 @@
+"0","write.csv(df.train,'../outputs/model.train.csv')"
+"0","write.csv(df.test,'../outputs/model.test.csv')"

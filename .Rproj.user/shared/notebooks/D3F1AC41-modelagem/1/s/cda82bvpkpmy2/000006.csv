@@ -1,0 +1,2 @@
+"0","model.train[,unlist(lapply(model.train,class)) %in% 'character'] <- data.frame(apply(model.train[,unlist(lapply(model.train,class)) %in% 'character'],2,factor))"
+"0","model.train"

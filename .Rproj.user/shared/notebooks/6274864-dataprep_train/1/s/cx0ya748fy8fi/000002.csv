@@ -1,3 +1,0 @@
-"0","df.fac <- df.train[,unlist(lapply(df.train,is.character))] %>%"
-"0","          apply(2,as.factor) %>% "
-"0","          data.frame()"

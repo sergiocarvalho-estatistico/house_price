@@ -1,0 +1,6 @@
+"0","write.csv(CBlock,'.../outputs/CBlock.csv') 
+"
+"2","cannot open file '.../outputs/CBlock.csv': No such file or directory"
+"2","Error in file(file, ifelse(append, ""a"", ""w"")) : 
+  cannot open the connection
+"

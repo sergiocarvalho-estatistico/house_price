@@ -1,3 +1,0 @@
-"0","tipo <- lapply(model.test,class)"
-"0","model.test[,unlist(tipo) %in% 'character'] <- data.frame(apply(model.test[,unlist(tipo) %in% 'character'],2,factor))"
-"0","model.test"

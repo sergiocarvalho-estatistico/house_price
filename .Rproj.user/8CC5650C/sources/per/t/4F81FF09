@@ -5,16 +5,16 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "1261456975",
+    "hash" : "4141862563",
     "id" : "4F81FF09",
-    "lastKnownWriteTime" : 1553226802,
-    "last_content_update" : 1553226802270,
+    "lastKnownWriteTime" : 1553303627,
+    "last_content_update" : 1553303627888,
     "path" : "D:/houseprice/dataexploration/dataexplorer.Rmd",
     "project_path" : "dataexploration/dataexplorer.Rmd",
     "properties" : {
         "chunk_output_type" : "inline",
-        "cursorPosition" : "375,0",
-        "scrollLine" : "370"
+        "cursorPosition" : "464,1",
+        "scrollLine" : "0"
     },
     "relative_order" : 3,
     "source_on_save" : false,

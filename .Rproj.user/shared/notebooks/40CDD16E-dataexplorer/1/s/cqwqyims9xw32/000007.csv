@@ -1,0 +1,7 @@
+"0","df.train <- df.train %>% "
+"0","            filter(!(HouseStyle %in% c('2.5Fin')),"
+"0","                   !(RoofMatl %in% c('ClyTile','Membran','Metal','Roll')),"
+"0","                   !(Exterior1st %in% c('Stone','ImStucc')),"
+"0","                   !(Exterior2nd %in% 'Other'),"
+"0","                   !(Electrical %in% 'Mix'))"
+"0","df.train"

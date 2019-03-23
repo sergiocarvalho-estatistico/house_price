@@ -76,6 +76,7 @@ df.train <- data.table::fread('../dados/train.csv',
                               sep=",", 
                               showProgress = FALSE) %>% 
             data.frame(stringsAsFactors = F)
+
 df.train
 ```
 
@@ -238,7 +239,7 @@ df.fac <- df.fac[,cols.fac]
 ```
 
 
-```{r values-nulos, fig.width=15, fig.height=7}
+```{r values-nulos-fac, fig.width=15, fig.height=7}
 apply(is.na(df.fac),2,function(x) round(100*sum(as.numeric(x))/length(x),2)) %>% 
            sort(decreasing = T)
 ```
@@ -416,9 +417,7 @@ Jutando os dados tipo inteiros e string.
 
 ```{r bind-dfs-fac}
 df.train <- bind_cols(df.int,df.fac)
-df.train
 ```
-
 
 Agora nosso df.train encontra-se limpo e pronto para ser explorado.
 

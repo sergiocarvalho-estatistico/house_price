@@ -1,0 +1,6 @@
+"0","for(j in 21:25){ "
+"0","  "
+"0"," print(f.prop(df.train_fac,df.test_fac,names(df.train_fac)[j]))"
+"0"," cat('\n\n')    "
+"0"," "
+"0","}"

@@ -180,6 +180,7 @@ data.frame(variavel = as.character(ks.mat[,1]),
            arrange(desc(dn))
 ```
 
+
 Esses resultados nos mostram que não há disferença estatística para todas as variáveis considerandos os conjuntos de dados de treino e teste, no entanto, os níveis de significância das variáveis X2ndFlrSF, GrLivArea, TotRmsAbvGrd e LotArea ficaram mais próximos do threshold 0.0374, iremos investigá-las.
 
 
@@ -187,14 +188,18 @@ Esses resultados nos mostram que não há disferença estatística para todas as
 
 
 ```{r summary-vars-train}
-df.train.num[,!names(df.train.num) %in% c('YearBuilt','TotalBsmtSF','X1stFlrSF','GrLivArea')][,1:6] %>% 
-  summary 
+df.train.num[,!names(df.train.num) %in% 
+               c('YearBuilt','TotalBsmtSF',
+                 'X1stFlrSF','GrLivArea')][,1:6] %>% 
+               summary 
 ```
 
 
 ```{r summary-vars-test}
-df.test.num[,!names(df.test.num) %in% c('YearBuilt','TotalBsmtSF','X1stFlrSF','GrLivArea')][,1:6] %>% 
-  summary
+df.test.num[,!names(df.test.num) %in% 
+              c('YearBuilt','TotalBsmtSF',
+                'X1stFlrSF','GrLivArea')][,1:6] %>% 
+              summary
 ```
 
 Oberve que a variável LotArea no conjunto de treino possui um valor máximo de 215245 enquanto que no conjunto de teste seu valor máximo é 51974, essa variação modificou a posição das medianas nos conjuntos de dados, o que pode implicar em outliers e comprometer a performance do nosso futuro modelo preditivo. 
@@ -241,7 +246,8 @@ veja que são apenas 4 linhas de modo que podemos remove-las sem comprometer o v
 ### Boxplot para o mesmo valor máximo 
 
 ```{r new-boxplot-lot-area, fig.width=15,fig.height=5}
-boxplot(df.train.num$LotArea[df.train.num$LotArea <= max(df.test.num$LotArea)],
+df.train.num <- df.train.num %>% filter(LotArea <= min(n.outliers))
+boxplot(df.train.num$LotArea,
         df.test.num$LotArea, 
         main = 'LotArea', 
         xlab = 'treino-teste')
@@ -299,13 +305,43 @@ df.test.num %>%
           ylim = c(0,max(df.train.num$TotRmsAbvGrd)))
 ```
 
-### Removendo linhas no df.train
 
-Como vimos temos apenas 4 linhas para serem removidas para variável LotAarea.  
+## Summary nas variáveis
 
-```{r remove-rows-lot-area-dftrain}
-df.train <- df.train %>% filter(LotArea <= sort(n.outliers)[1])
+
+```{r summary-vars-train}
+df.train.num[,!names(df.train.num) %in% 
+               c('YearBuilt','TotalBsmtSF',
+                 'X1stFlrSF','GrLivArea')][,7:12] %>% 
+               summary 
 ```
+
+```{r summary-vars-test}
+df.test.num[,!names(df.test.num) %in% 
+              c('YearBuilt','TotalBsmtSF',
+                'X1stFlrSF','GrLivArea')][,7:12] %>% 
+              summary
+```
+
+
+
+```{r summary-vars-train}
+df.train.num[,!names(df.train.num) %in% 
+               c('YearBuilt','TotalBsmtSF',
+                 'X1stFlrSF','GrLivArea')][,13:18] %>% 
+               summary 
+```
+
+
+```{r summary-vars-test}
+df.test.num[,!names(df.test.num) %in% 
+              c('YearBuilt','TotalBsmtSF',
+                'X1stFlrSF','GrLivArea')][,13:18] %>% 
+              summary
+```
+
+veja que a variável GarageYrBlt na amostra de teste possui valor máximo 8.67 enquanto que na amostra de treino seu valor máximo é 1.27, no entanto não podemos realizar qualquer remoção dos valores por se tratar da amostra de teste. 
+
 
 
 # Trabalhando com Dados do Tipo Categórico 
@@ -355,7 +391,6 @@ for(j in 1:5){
  cat('\n\n')    
  
 }  
-df.trai
 ```
 
 Veja que no conjunto de teste para a variável Utilities não há a classe NoSeWa e como há apenas uma linhas com essa classe no conjunto de treino, irei remove-lá.
@@ -371,8 +406,10 @@ for(j in 6:10){
 
 Classes ausentes no conjunto de dados de teste:
 
- * Condition2 
- * * RRNn, RRAe e RRAn
+ * HouseStyle
+ * * 2.5Fin
+ * RoofMatl
+ * * ClyTile, Membran, Metal, Roll
 
 
 ```{r vars-categoricas-11-15}
@@ -386,13 +423,10 @@ for(j in 11:15){
 
 Classes ausentes no conjunto de dados de teste:
 
-  * HouseStyle  
-  * * 2.5Fin, remover 6 linhas    
-  * RoofMatl
-  * * Membran, Metal, Roll , remover 3 linhas  
   * Exterior1st 
-  * * Stone, CBlock, ImStucc , remover 3 linhas   
-  
+  * * Stone, CBlock, ImStucc    
+  * Exterior2nd
+  * * Other
 
 ```{r vars-categoricas-16-20}
 for(j in 16:20){ 
@@ -403,17 +437,6 @@ for(j in 16:20){
 }
 ```
 
-Classes ausentes no conjunto de dados de teste:
-
-  * Exterior2nd  
-  * * AsphShn, Stone, CBlock, Other     
-
-
-
-```{r ExterCond}
-count(df.train_fac,ExterCond)
-count(df.test_fac,ExterCond)
-```
 
 Na amostra de teste a classe Po da variável ExterCond não existe na amostra de treino.
 
@@ -427,46 +450,15 @@ for(j in 21:25){
 }
 ```
 
+Classes ausentes no conjunto de dados de teste:
+
+ * Electrical
+ * * Mix
+ 
+
 
 ```{r vars-categoricas-26-30}
 for(j in 26:30){ 
-  
- print(f.prop(df.train_fac,df.test_fac,names(df.train_fac)[j]))
- cat('\n\n')    
- 
-}
-```
-
-
-Classes ausentes no conjunto de dados de teste:
-
-  * Heating  
-  * * Grav, OthW     
-  * Electrical
-  * * Mix 
-
-
-
-```{r vars-categoricas-31-35}
-for(j in 31:35){ 
-  
- print(f.prop(df.train_fac,df.test_fac,names(df.train_fac)[j]))
- cat('\n\n')    
- 
-}
-```
-
-
-Classes ausentes no conjunto de dados de teste:
-
-  * Functional  
-  * * Sev     
-  * GarageQual
-  * * Ex 
-
-
-```{r vars-categoricas-36-38}
-for(j in 36:38){ 
   
  print(f.prop(df.train_fac,df.test_fac,names(df.train_fac)[j]))
  cat('\n\n')    
@@ -478,60 +470,27 @@ for(j in 36:38){
 
 Quais as categorias que serão removidas de quais variáveis e amotras ?
 
-   * Condition2  
-   * * RRNn, RRAe e RRAn | df.train
-   * HouseStyle  
-   * * 2.5Fin | df.train    
-   * RoofMatl
-   * * Membran, Metal, Roll | df.train  
-   * Exterior1st 
-   * * Stone, CBlock, ImStucc | df.train   
-   * Exterior2nd  
-   * * AsphShn, Stone, CBlock, Other | df.train       
-   * ExterCond
-   * * Po | df.test
-   * Heating  
-   * * Grav, OthW | df.train   
-   * Electrical
-   * * Mix | df.train
-   * Functional  
-   * * Sev     | df.train
-   * GarageQual
-   * * Ex    | df.train
-
-
-# Obtendo um novo df.train
-
-Para remover os níveis das variáveis categóricas precisamos converte-las para o tipo string. 
-
-```{r convert-to-string-df.train}
-tipo <- lapply(df.train,class)
-df.train[,unlist(tipo) != 'integer'] <- 
-data.frame(lapply(df.train[,unlist(tipo)!='integer'],function(x) as.character(unlist(x))), stringsAsFactors = F) 
-```
+ * HouseStyle
+ * * 2.5Fin
+ * RoofMatl
+ * * ClyTile, Membran, Metal, Roll
+ * Exterior1st 
+ * * Stone, CBlock, ImStucc    
+ * Exterior2nd
+ * * Other
+ * Electrical
+ * * Mix
 
 ## Filtrando linhas no df.train
 
 ```{r filter-rows-dftrain}
 df.train <- df.train %>% 
-            filter(!(Condition2 %in% c('RRNn','RRAe','RRAn')),
-                   !(HouseStyle %in% c('2.5Fin')),
-                   !(RoofMatl %in% c('Membran','Metal','Roll')),
-                   !(Exterior1st %in% c('Stone','CBlock','ImStucc')),
-                   !(Exterior2nd %in% c('AsphShn','Stone','CBlock','Other')),
-                   !(Heating %in% c('Grav','OthW')),
-                   !(Electrical %in% c('Grav','OthW')),
-                   !(Functional %in% c('Sev')),
-                   !(GarageQual %in% c('Ex')))
+            filter(!(HouseStyle %in% c('2.5Fin')),
+                   !(RoofMatl %in% c('ClyTile','Membran','Metal','Roll')),
+                   !(Exterior1st %in% c('Stone','ImStucc')),
+                   !(Exterior2nd %in% 'Other'),
+                   !(Electrical %in% 'Mix'))
 df.train
-```
-   
-## Filtrando linhas no df.test
-
-```{r}
-df.test$ExterCond <- as.character(unlist(df.test$ExterCond))
-df.test <- df.test %>% filter(ExterCond != 'Po')
-df.test
 ```
 
 ## Exportando os data frames

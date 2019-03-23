@@ -1,3 +1,0 @@
-"0","write.csv(df.train,'../outputs/df.train.csv')"
-"0","saveRDS(cols.int,'../outputs/cols.int.rds')"
-"0","saveRDS(cols.fac,'../outputs/cols.fac.rds')"
