@@ -1,37 +1,129 @@
-## Welcome to GitHub Pages
+---
+title: "House price"
+author: "Sérgio Carvalho"
+date: "`r format(Sys.Date(), '%d %B, %Y')`"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    lightbox: true
+    gallery: false
+    highlight: zenburn 
+    code_folding: show
+    style_body: justify
+    df_print: paged
+    number_sections: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+editor_options: 
+    chunk_output_type: inline
+---
 
-You can use the [editor on GitHub](https://github.com/sergiocarvalho-estatistico/houseprice/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
-
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+```{r options-chunk, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      eval = TRUE, 
+                      message = FALSE,
+                      warning = FALSE, 
+                      include = TRUE,
+                      fig.path = "figures/",
+                      fig.width = 15, 
+                      fig.height = 6)
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
 
-### Jekyll Themes
+# Reunião de Alinhamento  
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/sergiocarvalho-estatistico/houseprice/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+## Participantes
 
-### Support or Contact
+* [Jonathan Garcia Lima](https://www.linkedin.com/in/jonathanglima/) 
+* [Cristiane Custodio](https://www.linkedin.com/in/cristiane-cust%C3%B3dio-ab255b71/)
+* [Sérgio Carvalho](https://sergiocarvalho-estatistico.github.io/)
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+
+# Espeficicações do Projeto
+
+## Acesso ao projeto
+
+  * [House Prices - Advanced Regression Techniques](https://www.kaggle.com/c/house-prices-advanced-regression-techniques)
+
+## Tipo de Teste
+
+  * Modelo de regressão. 
+      * Estimativa de preços de casas 
+      
+## Objetivo do Projeto
+
+  * O objetivo não é atingir a melhor pontuação possível.
+  * Avaliar a linha de raciocínio utilizada.
+  * Criatividade.
+  * Estratégia 
+  * Domínio das técnicas de modelagem e ferramentas utilizadas.
+      
+
+## Solicitações do teste
+
+  * Submeta seu(s) resultado(s) de predição diretamente na plataforma do Kaggle até 21/03/2019.
+  * Nos envie seu usuário ou nome do leaderboard da plataforma.
+  * Nos envie o CSV e o código utilizado para resolução do teste.
+
+## Relatório dos resultados
+
+  * Comentários no código explicando a solução são bem vindos. 
+  * A pontuação do Kaggle é somente para comparação com outras técnicas utilizadas já conhecidas.
+
+
+# Resumo do projeto 
+
+Ask a home buyer to describe their dream house, and they probably won't begin with the height of the basement ceiling or the proximity to an east-west railroad. But this playground competition's dataset proves that much more influences price negotiations than the number of bedrooms or a white-picket fence.
+
+With 79 explanatory variables describing (almost) every aspect of residential homes in Ames, Iowa, this competition challenges you to predict the final price of each home.  
+
+
+# Etapas do desenvolvimento do Projeto
+
+## Preparação dos dados
+
+  * Conhecer as caracteristicas dos dados
+      * Número de variáveis
+      * Tipo de variáveis
+      * * Inteiras ou discretas
+      * * Numéricas ou double
+      * * Categóricas
+      * * Qualitativas
+      * Qualidade dos dados          
+      * * Quantidade de NA's por variável
+  * Criação de novas variáveis, se precisar
+  * Transformação das variáveis, se precisar
+
+## Análise Exploratória de Dados
+
+  * Qual o comportamento da variável resposta ?
+  * Quais variáveis estão fortemente correlacionadas ?
+  * Qual a métrica usada para verificar a correlação ? 
+  * Quais variáveis tem maior influência discriminatória sob a variável resposta.
+  * Para quais intervalos de determinadas variáveis tenho maior diferença no valor variável resposta ?
+  * Faz sentido discretizá-las ?
+  * Faz sentido agrupá-las ?
+  * Definindo o analytic-base-table (abt)
+
+
+## Modelagem Preditiva de dados
+
+  * Quais Modelos utilizar ? 
+  * Queremos somente prever o valor do preço ou tambám dar um diagnóstico ?  
+  * Modelos no Radar
+      * Regressão por Redes Bayesians
+      * Modelos Lineares Generalizados
+      * Modelos de Machine Learning
+      
+## Métricas de Performance
+
+  * RMSE
+  * Rsquare
+  
+
+# Referências
+  
+[Modelo Lineares Generalizados](https://www.ime.usp.br/~giapaula/texto_2013.pdf)
