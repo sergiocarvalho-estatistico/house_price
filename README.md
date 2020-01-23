@@ -1,12 +1,3 @@
-# Reunião de Alinhamento  
-
-## Participantes
-
-* [Jonathan Garcia Lima](https://www.linkedin.com/in/jonathanglima/) 
-* [Cristiane Custodio](https://www.linkedin.com/in/cristiane-cust%C3%B3dio-ab255b71/)
-* [Sérgio Carvalho](https://sergiocarvalho-estatistico.github.io/)
-
-
 # Espeficicações do Projeto
 
 ## Acesso ao projeto
